@@ -176,20 +176,6 @@ The reconciliation engine includes tests for all 12 scenarios:
 11. Human approval workflow
 12. Audit log creation
 
-## 🎬 Demo Flow (5 Minutes)
-
-| Time | What to Show |
-|------|-------------|
-| 0:00–0:30 | Explain the reconciliation problem |
-| 0:30–1:00 | Show the architecture diagram |
-| 1:00–2:00 | Generate 500 records and run reconciliation |
-| 2:00–2:45 | Show dashboard with real metrics |
-| 2:45–3:30 | Open a matched transaction — show deterministic reconciliation |
-| 3:30–4:00 | Open an ambiguous transaction — show AI reasoning |
-| 4:00–4:30 | Show the intentionally unresolved transaction |
-| 4:30–5:00 | Show evaluation metrics, exception list, audit trail |
-
-> *"IniRazorAI doesn't try to automate every financial decision. It automates what can be proven, uses AI where reasoning is needed, and escalates uncertainty instead of guessing."*
 
 ## 🔒 Security
 
