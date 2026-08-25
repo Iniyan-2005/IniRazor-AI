@@ -1,21 +1,39 @@
 import React from 'react';
 
-const ProgressBar = ({ current, total, label }) => {
-  const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+const ProgressBar = ({ current, total, label, color }) => {
+  const percentage = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  const barColor = color ?? 'var(--primary)';
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium text-slate-700">{label}</span>
-        <span className="text-sm font-medium text-slate-600">
-          {current} / {total} ({percentage}%)
+    <div style={{ width: '100%' }}>
+      <div className="flex justify-between items-center mb-1.5">
+        {label && (
+          <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {label}
+          </span>
+        )}
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', marginLeft: '0.5rem', flexShrink: 0 }}>
+          {percentage}%
         </span>
       </div>
-      <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-        <div 
-          className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out" 
-          style={{ width: `${percentage}%` }}
-        ></div>
+      <div
+        style={{
+          width: '100%',
+          height: '0.5rem',
+          borderRadius: '9999px',
+          overflow: 'hidden',
+          backgroundColor: 'var(--bg-surface-3)',
+        }}
+      >
+        <div
+          style={{
+            width: `${percentage}%`,
+            height: '100%',
+            borderRadius: '9999px',
+            backgroundColor: barColor,
+            transition: 'width 500ms ease-out',
+          }}
+        />
       </div>
     </div>
   );

@@ -2,9 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>inirazorai</title>
+    <title>IniRazorAI — AI Finance Controller</title>
+
+    <!--
+      Anti-flash theme script: runs synchronously BEFORE React hydrates.
+      Reads localStorage, falls back to system preference.
+      Adds the 'dark' class to <html> immediately if needed.
+      This prevents a white flash in users who prefer dark mode.
+    -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem('inirazor-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

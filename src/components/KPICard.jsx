@@ -1,35 +1,138 @@
 import React from 'react';
 
-const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) => {
-  const colorClasses = {
-    blue: 'border-blue-500 text-blue-600 bg-blue-50',
-    green: 'border-green-500 text-green-600 bg-green-50',
-    amber: 'border-amber-500 text-amber-600 bg-amber-50',
-    red: 'border-red-500 text-red-600 bg-red-50',
-    purple: 'border-purple-500 text-purple-600 bg-purple-50',
-    slate: 'border-slate-500 text-slate-600 bg-slate-50',
-  };
+/**
+ * KPICard — A metric card with a colored icon + value.
+ * Uses CSS var-based card surface for automatic dark mode.
+ * Left border accent uses semantic color tokens.
+ */
 
-  const selectedColor = colorClasses[color] || colorClasses.blue;
-  const [borderColor, textColor, bgColor] = selectedColor.split(' ');
+// All accent colors are semantic — they use appropriate dark-mode variants
+// via the CSS vars defined in index.css
+const COLOR_MAP = {
+  blue:    { border: '#3b82f6', iconBg: 'rgba(59,130,246,0.12)',  iconColor: '#3b82f6'  },
+  green:   { border: '#10b981', iconBg: 'rgba(16,185,129,0.12)', iconColor: '#10b981' },
+  emerald: { border: '#10b981', iconBg: 'rgba(16,185,129,0.12)', iconColor: '#10b981' },
+  amber:   { border: '#f59e0b', iconBg: 'rgba(245,158,11,0.12)', iconColor: '#f59e0b' },
+  red:     { border: '#ef4444', iconBg: 'rgba(239,68,68,0.12)',  iconColor: '#ef4444'  },
+  purple:  { border: '#8b5cf6', iconBg: 'rgba(139,92,246,0.12)', iconColor: '#8b5cf6' },
+  violet:  { border: '#7c3aed', iconBg: 'rgba(124,58,237,0.12)', iconColor: '#7c3aed' },
+  slate:   { border: '#64748b', iconBg: 'rgba(100,116,139,0.12)',iconColor: '#64748b'  },
+};
+
+// In dark mode we use brighter variants so they're visible on dark surface
+const COLOR_MAP_DARK = {
+  blue:    { border: '#60a5fa', iconBg: 'rgba(96,165,250,0.15)',  iconColor: '#93c5fd' },
+  green:   { border: '#34d399', iconBg: 'rgba(52,211,153,0.15)',  iconColor: '#6ee7b7' },
+  emerald: { border: '#34d399', iconBg: 'rgba(52,211,153,0.15)',  iconColor: '#6ee7b7' },
+  amber:   { border: '#fbbf24', iconBg: 'rgba(251,191,36,0.15)',  iconColor: '#fcd34d' },
+  red:     { border: '#f87171', iconBg: 'rgba(248,113,113,0.15)', iconColor: '#fca5a5' },
+  purple:  { border: '#a78bfa', iconBg: 'rgba(167,139,250,0.15)', iconColor: '#c4b5fd' },
+  violet:  { border: '#a78bfa', iconBg: 'rgba(167,139,250,0.15)', iconColor: '#c4b5fd' },
+  slate:   { border: '#64748b', iconBg: 'rgba(100,116,139,0.15)', iconColor: '#94a3b8' },
+};
+
+const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) => {
+  // Detect dark mode via the html element class (synced by useTheme)
+  const isDark =
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('dark');
+
+  const palette = (isDark ? COLOR_MAP_DARK : COLOR_MAP)[color] ?? COLOR_MAP.blue;
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border-l-4 ${borderColor} p-5 flex items-center justify-between`}>
-      <div>
-        <h3 className="text-sm font-medium text-slate-500 mb-1">{title}</h3>
-        <div className="flex items-end gap-3">
-          <p className="text-2xl font-bold text-slate-800">{value}</p>
+    <div
+      style={{
+        backgroundColor: 'var(--bg-surface)',
+        border: `1px solid var(--border)`,
+        borderLeft: `4px solid ${palette.border}`,
+        borderRadius: '0.75rem',
+        boxShadow: 'var(--shadow-card)',
+        padding: '1.25rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        transition: 'box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = 'var(--shadow-card-hover)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <p
+          style={{
+            fontSize: '0.6875rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            color: 'var(--text-muted)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {title}
+        </p>
+        <div className="flex items-end gap-2 mt-1.5">
+          <p
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {value}
+          </p>
           {trend !== undefined && (
-            <div className={`flex items-center text-sm font-medium ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                paddingBottom: '0.125rem',
+                color: trend >= 0 ? 'var(--success)' : 'var(--danger)',
+              }}
+            >
               {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
-            </div>
+            </span>
           )}
         </div>
-        {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+        {subtitle && (
+          <p
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              marginTop: '0.25rem',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
+
       {Icon && (
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${bgColor} ${textColor}`}>
-          <Icon className="w-6 h-6" />
+        <div
+          style={{
+            width: '2.75rem',
+            height: '2.75rem',
+            borderRadius: '0.625rem',
+            backgroundColor: palette.iconBg,
+            color: palette.iconColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'background-color 200ms ease, color 200ms ease',
+          }}
+        >
+          <Icon style={{ width: '1.25rem', height: '1.25rem' }} />
         </div>
       )}
     </div>

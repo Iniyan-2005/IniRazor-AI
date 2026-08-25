@@ -237,15 +237,15 @@ const ReconciliationPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Reconciliation Engine</h1>
-            <p className="text-slate-500 mt-1">Generate synthetic data, run the deterministic engine, and investigate exceptions with AI.</p>
+            <h1 className="page-title">Reconciliation Engine</h1>
+            <p className="page-subtitle">Generate synthetic data, run the deterministic engine, and investigate exceptions with AI.</p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* AI Mode indicator */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium border border-purple-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 text-violet-700 rounded-lg text-xs font-semibold border border-violet-200">
               <Bot className="w-3.5 h-3.5" />
               {getAIMode()}
             </div>
@@ -267,30 +267,31 @@ const ReconciliationPage = () => {
                     toast.error('Razorpay sync failed: ' + err.message);
                   }
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-200 hover:bg-blue-100 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-colors"
               >
                 <CreditCard className="w-3.5 h-3.5" />
-                Sync Razorpay Data
+                Sync Razorpay
               </button>
             )}
           </div>
         </div>
       </div>
 
+
       {/* Steps */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Step 1: Generate Data */}
-        <div className="card p-6 border-t-4 border-primary-500">
+        <div className="card p-6" style={{ borderTop: '4px solid var(--primary)' }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-primary-100 p-2.5 rounded-lg">
-              <Database className="w-5 h-5 text-primary-600" />
+            <div style={{ backgroundColor: 'var(--primary-subtle)', padding: '0.625rem', borderRadius: '0.5rem' }}>
+              <Database style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-text)' }} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">1. Generate Data</h2>
-              <p className="text-xs text-slate-500">500 synthetic records</p>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>1. Generate Data</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>500 synthetic records</p>
             </div>
           </div>
-          <p className="text-slate-600 mb-4 text-sm">
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>
             Create realistic payment and settlement records with known ground truth for testing.
           </p>
           <button
@@ -307,37 +308,54 @@ const ReconciliationPage = () => {
             </div>
           )}
           {dataGenerated && !isGenerating && (
-            <div className="mt-4 flex items-center text-sm text-emerald-600 font-medium">
+            <div className="mt-4 flex items-center text-sm font-medium" style={{ color: 'var(--success)' }}>
               <CheckCircle2 className="w-4 h-4 mr-1.5" /> 500 records ready
             </div>
           )}
         </div>
 
         {/* Step 2: Run Reconciliation */}
-        <div className={`card p-6 border-t-4 ${dataGenerated ? 'border-purple-500' : 'border-slate-200 opacity-60'}`}>
+        <div
+          className="card p-6"
+          style={{
+            borderTop: `4px solid ${dataGenerated ? 'var(--ai)' : 'var(--border)'}`,
+            opacity: dataGenerated ? 1 : 0.6,
+          }}
+        >
           <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2.5 rounded-lg ${dataGenerated ? 'bg-purple-100' : 'bg-slate-100'}`}>
-              <Zap className={`w-5 h-5 ${dataGenerated ? 'text-purple-600' : 'text-slate-400'}`} />
+            <div
+              style={{
+                padding: '0.625rem',
+                borderRadius: '0.5rem',
+                backgroundColor: dataGenerated ? 'var(--ai-subtle)' : 'var(--bg-surface-2)',
+              }}
+            >
+              <Zap style={{ width: '1.25rem', height: '1.25rem', color: dataGenerated ? 'var(--ai)' : 'var(--text-muted)' }} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">2. Run Reconciliation</h2>
-              <p className="text-xs text-slate-500">Deterministic + AI</p>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>2. Run Reconciliation</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deterministic + AI</p>
             </div>
           </div>
-          <p className="text-slate-600 mb-4 text-sm">
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>
             Execute rule-based matching, then invoke AI for ambiguous discrepancies.
           </p>
           <button
             onClick={handleRunReconciliation}
             disabled={!dataGenerated || isReconciling}
-            className={`w-full justify-center ${dataGenerated ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'} font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2`}
+            className={`w-full justify-center font-medium px-4 py-2 rounded-lg transition-all duration-150 flex items-center gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50`}
+            style={
+              dataGenerated
+                ? { backgroundColor: 'var(--ai)', color: '#fff' }
+                : { backgroundColor: 'var(--bg-surface-3)', color: 'var(--text-muted)' }
+            }
           >
             {isReconciling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             <span>{isReconciling ? 'Processing...' : 'Run Reconciliation'}</span>
           </button>
           {isReconciling && (
             <div className="mt-4">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
                 <span>{reconStep}</span>
                 <span>{Math.round((reconProgress / 100) * totalRecords)}/{totalRecords}</span>
               </div>
@@ -347,38 +365,42 @@ const ReconciliationPage = () => {
         </div>
 
         {/* Step 3: View Results */}
-        <div className={`card p-6 border-t-4 ${results ? 'border-emerald-500' : 'border-slate-200 opacity-60'}`}>
+        <div
+          className="card p-6"
+          style={{
+            borderTop: `4px solid ${results ? 'var(--success)' : 'var(--border)'}`,
+            opacity: results ? 1 : 0.6,
+          }}
+        >
           <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2.5 rounded-lg ${results ? 'bg-emerald-100' : 'bg-slate-100'}`}>
-              <BarChart3 className={`w-5 h-5 ${results ? 'text-emerald-600' : 'text-slate-400'}`} />
+            <div
+              style={{
+                padding: '0.625rem',
+                borderRadius: '0.5rem',
+                backgroundColor: results ? 'var(--success-subtle)' : 'var(--bg-surface-2)',
+              }}
+            >
+              <BarChart3 style={{ width: '1.25rem', height: '1.25rem', color: results ? 'var(--success)' : 'var(--text-muted)' }} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">3. View Results</h2>
-              <p className="text-xs text-slate-500">Metrics & analysis</p>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>3. View Results</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Metrics & analysis</p>
             </div>
           </div>
           {results ? (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Total Records:</span>
-                <span className="font-semibold">{formatNumber(results.total)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Match Rate:</span>
-                <span className="font-semibold text-emerald-600">{results.matchRate}%</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">AI Resolved:</span>
-                <span className="font-semibold text-blue-600">{formatNumber(results.aiResolved)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Needs Review:</span>
-                <span className="font-semibold text-amber-600">{formatNumber(results.needsReview)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Duration:</span>
-                <span className="font-medium">{formatDuration(results.duration)}</span>
-              </div>
+            <div className="space-y-2.5">
+              {[
+                { label: 'Total Records',  value: formatNumber(results.total),       color: 'var(--text-primary)'   },
+                { label: 'Match Rate',     value: `${results.matchRate}%`,            color: 'var(--success)'        },
+                { label: 'AI Resolved',    value: formatNumber(results.aiResolved),   color: 'var(--primary)'        },
+                { label: 'Needs Review',   value: formatNumber(results.needsReview),  color: 'var(--warning)'        },
+                { label: 'Duration',       value: formatDuration(results.duration),   color: 'var(--text-secondary)' },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{label}:</span>
+                  <span style={{ fontWeight: 600, color }}>{value}</span>
+                </div>
+              ))}
               <div className="pt-3 space-y-2">
                 <button onClick={() => navigate('/')} className="btn-primary w-full justify-center text-sm">
                   <BarChart3 className="w-4 h-4" /> View Dashboard
@@ -389,7 +411,9 @@ const ReconciliationPage = () => {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-400 italic">Run reconciliation to see results.</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+              Run reconciliation to see results.
+            </p>
           )}
         </div>
       </div>
@@ -398,16 +422,16 @@ const ReconciliationPage = () => {
       {results && (
         <div className="card">
           <div className="card-header">
-            <h3 className="text-lg font-semibold text-slate-900">Reconciliation Summary</h3>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Reconciliation Summary</h3>
           </div>
           <div className="card-body">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <KPICard title="Total" value={formatNumber(results.total)} icon={Database} color="blue" />
-              <KPICard title="Matched" value={formatNumber(results.matched)} icon={CheckCircle2} color="green" />
-              <KPICard title="AI Resolved" value={formatNumber(results.aiResolved)} icon={Brain} color="purple" />
-              <KPICard title="Needs Review" value={formatNumber(results.needsReview)} icon={AlertTriangle} color="amber" />
-              <KPICard title="Unresolved" value={formatNumber(results.unresolved || 0)} icon={AlertTriangle} color="red" />
-              <KPICard title="Processing" value={formatDuration(results.duration)} icon={Zap} color="slate" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 stagger-enter">
+              <KPICard title="Total"        value={formatNumber(results.total)}           icon={Database}       color="blue"   />
+              <KPICard title="Matched"      value={formatNumber(results.matched)}         icon={CheckCircle2}   color="green"  />
+              <KPICard title="AI Resolved"  value={formatNumber(results.aiResolved)}      icon={Brain}          color="purple" />
+              <KPICard title="Needs Review" value={formatNumber(results.needsReview)}     icon={AlertTriangle}  color="amber"  />
+              <KPICard title="Unresolved"   value={formatNumber(results.unresolved || 0)} icon={AlertTriangle}  color="red"    />
+              <KPICard title="Processing"   value={formatDuration(results.duration)}      icon={Zap}            color="slate"  />
             </div>
           </div>
         </div>
@@ -417,3 +441,4 @@ const ReconciliationPage = () => {
 };
 
 export default ReconciliationPage;
+

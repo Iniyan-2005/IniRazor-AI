@@ -92,8 +92,8 @@ export const STATUS_COLORS = {
   DUPLICATE: { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
   AMOUNT_MISMATCH: { bg: 'bg-rose-100', text: 'text-rose-800', dot: 'bg-rose-500' },
   UNEXPLAINED_DISCREPANCY: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
-  INVALID: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' },
-  AI_UNAVAILABLE: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' },
+  INVALID: { bg: 'bg-slate-100', text: 'text-slate-700', dot: 'bg-slate-400' },
+  AI_UNAVAILABLE: { bg: 'bg-slate-100', text: 'text-slate-700', dot: 'bg-slate-400' },
 }
 
 // Method labels for display

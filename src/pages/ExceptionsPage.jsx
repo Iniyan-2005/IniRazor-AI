@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye } from 'lucide-react';
+import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye, Brain } from 'lucide-react';
 import { getStore, updateReconciliation, addAuditLog } from '../services/dataService';
 import StatusBadge from '../components/StatusBadge';
 import ConfidenceMeter from '../components/ConfidenceMeter';
-import { formatCurrency, formatConfidence, generateId } from '../utils/formatters';
+import { formatCurrency, generateId } from '../utils/formatters';
 import { RECON_STATUS, EVENT_TYPES, ACTORS } from '../utils/constants';
 
 const ExceptionsPage = () => {
@@ -16,7 +16,6 @@ const ExceptionsPage = () => {
 
   const handleAction = (reconId, action) => {
     let newStatus, eventType, toastMsg, actionType;
-    
     if (action === 'approve') {
       newStatus = RECON_STATUS.AI_RESOLVED;
       eventType = EVENT_TYPES.HUMAN_APPROVED;
@@ -30,12 +29,10 @@ const ExceptionsPage = () => {
     } else if (action === 'mark_unresolved') {
       newStatus = RECON_STATUS.UNRESOLVED;
       eventType = EVENT_TYPES.HUMAN_UNRESOLVED;
-      toastMsg = 'Transaction marked as unresolved';
+      toastMsg = 'Marked as unresolved';
       actionType = 'Marked as unresolved';
     }
-
     updateReconciliation(reconId, { status: newStatus });
-    
     addAuditLog({
       id: generateId(),
       reconciliation_id: reconId,
@@ -48,159 +45,235 @@ const ExceptionsPage = () => {
       confidence: null,
       created_at: new Date().toISOString(),
     });
-
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
     toast.success(toastMsg);
   };
 
-  const exceptions = useMemo(() => {
-    return reconciliations.filter(r => 
-      r.status === RECON_STATUS.NEEDS_REVIEW || 
-      r.status === RECON_STATUS.UNRESOLVED
-    );
-  }, [reconciliations, refreshKey]);
+  const exceptions = useMemo(
+    () => reconciliations.filter(
+      (r) => r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.UNRESOLVED
+    ),
+    [reconciliations, refreshKey]
+  );
 
-  const filteredExceptions = useMemo(() => {
-    if (activeTab === 'ALL') return exceptions;
-    return exceptions.filter(e => e.status === activeTab);
-  }, [exceptions, activeTab]);
+  const filteredExceptions = useMemo(
+    () => activeTab === 'ALL' ? exceptions : exceptions.filter((e) => e.status === activeTab),
+    [exceptions, activeTab]
+  );
 
   const counts = {
     ALL: exceptions.length,
-    NEEDS_REVIEW: exceptions.filter(e => e.status === RECON_STATUS.NEEDS_REVIEW).length,
-    UNRESOLVED: exceptions.filter(e => e.status === RECON_STATUS.UNRESOLVED).length,
+    NEEDS_REVIEW: exceptions.filter((e) => e.status === RECON_STATUS.NEEDS_REVIEW).length,
+    UNRESOLVED: exceptions.filter((e) => e.status === RECON_STATUS.UNRESOLVED).length,
   };
 
+  const TABS = [
+    { id: 'NEEDS_REVIEW', label: 'Needs Review', icon: HelpCircle },
+    { id: 'UNRESOLVED',   label: 'Unresolved',   icon: XCircle },
+    { id: 'ALL',          label: 'All',           icon: AlertTriangle },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 page-enter">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Exceptions Queue</h1>
-        <p className="text-gray-500">Review and resolve transactions that require human intervention.</p>
+        <h1 className="page-title">Exceptions Queue</h1>
+        <p className="page-subtitle">Review and resolve transactions that require human intervention.</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 border-b border-gray-200">
-        {[
-          { id: 'NEEDS_REVIEW', label: 'Needs Review', icon: HelpCircle },
-          { id: 'UNRESOLVED', label: 'Unresolved', icon: XCircle },
-          { id: 'ALL', label: 'All Exceptions', icon: AlertTriangle },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <tab.icon className="w-4 h-4 mr-2" />
-            {tab.label}
-            <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
-              activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
-            }`}>
-              {counts[tab.id]}
-            </span>
-          </button>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', borderBottom: '1px solid var(--border)' }}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                padding: '0.625rem 1rem',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                borderBottom: `2px solid ${isActive ? 'var(--primary)' : 'transparent'}`,
+                marginBottom: '-1px',
+                color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+                transition: 'color 150ms ease, border-color 150ms ease',
+                background: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <tab.icon style={{ width: '0.875rem', height: '0.875rem' }} />
+              {tab.label}
+              <span
+                style={{
+                  marginLeft: '0.25rem',
+                  padding: '0.125rem 0.375rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  backgroundColor: isActive ? 'var(--primary-subtle)' : 'var(--bg-surface-2)',
+                  color: isActive ? 'var(--primary-text)' : 'var(--text-muted)',
+                }}
+              >
+                {counts[tab.id]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
+      {/* Empty state */}
       {filteredExceptions.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
-          <p className="text-gray-500 mt-1">No exceptions require your attention at this time.</p>
+        <div className="empty-state">
+          <div className="empty-state-icon" style={{ backgroundColor: 'var(--success-subtle)', color: 'var(--success)' }}>
+            <CheckCircle2 style={{ width: '1.5rem', height: '1.5rem' }} />
+          </div>
+          <div>
+            <p className="empty-state-title">All caught up!</p>
+            <p className="empty-state-desc">No exceptions require your attention right now.</p>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredExceptions.map(exception => (
-            <div key={exception.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <div className="flex space-x-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Payment: </span>
-                    <span className="font-mono font-medium">{exception.payment_id}</span>
-                  </div>
+          {filteredExceptions.map((exception) => (
+            <div key={exception.id} className="card overflow-hidden">
+              {/* Card header */}
+              <div
+                style={{
+                  padding: '0.75rem 1.25rem',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  backgroundColor: 'var(--bg-surface-2)',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.75rem' }}>
+                  <span>
+                    <span style={{ color: 'var(--text-muted)', marginRight: '0.25rem' }}>Payment</span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {exception.payment_id}
+                    </span>
+                  </span>
                   {exception.settlement_id && (
-                    <div>
-                      <span className="text-gray-500">Settlement: </span>
-                      <span className="font-mono font-medium">{exception.settlement_id}</span>
-                    </div>
+                    <span>
+                      <span style={{ color: 'var(--text-muted)', marginRight: '0.25rem' }}>Settlement</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {exception.settlement_id}
+                      </span>
+                    </span>
                   )}
                 </div>
-                <StatusBadge status={exception.status} />
+                <StatusBadge status={exception.status} size="sm" />
               </div>
-              
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-3 space-y-4">
+
+              {/* Card body — 3-col grid */}
+              <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Amounts */}
+                <div className="lg:col-span-3 space-y-3">
+                  <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>
+                    Amounts
+                  </p>
                   <div>
-                    <div className="text-sm text-gray-500 mb-1">Amounts</div>
-                    <div className="flex items-end space-x-2">
-                      <span className="text-xl font-medium">{formatCurrency(exception.expected_amount)}</span>
-                      <span className="text-sm text-gray-400 mb-0.5">expected</span>
-                    </div>
-                    <div className="flex items-end space-x-2">
-                      <span className="text-xl font-medium">{formatCurrency(exception.actual_amount)}</span>
-                      <span className="text-sm text-gray-400 mb-0.5">actual</span>
-                    </div>
-                    <div className="mt-2 text-sm text-red-600 font-medium bg-red-50 p-1.5 rounded inline-block">
+                    <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginBottom: '0.125rem' }}>Expected</p>
+                    <p style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(exception.expected_amount)}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginBottom: '0.125rem' }}>Actual</p>
+                    <p style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatCurrency(exception.actual_amount)}
+                    </p>
+                  </div>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.375rem',
+                      padding: '0.375rem 0.75rem',
+                      backgroundColor: 'var(--danger-subtle)',
+                      border: '1px solid color-mix(in srgb, var(--danger) 25%, transparent)',
+                      borderRadius: '0.5rem',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--danger)' }}>
                       Diff: {formatCurrency(exception.difference)}
-                    </div>
+                    </span>
                   </div>
                 </div>
 
-                <div className="lg:col-span-6 bg-purple-50 rounded-lg p-4 border border-purple-100">
+                {/* AI Analysis */}
+                <div
+                  className="lg:col-span-6 rounded-xl p-4"
+                  style={{
+                    backgroundColor: 'var(--ai-subtle)',
+                    border: '1px solid color-mix(in srgb, var(--ai) 25%, transparent)',
+                  }}
+                >
                   {exception.ai_analysis ? (
                     <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-xs font-bold uppercase tracking-wider text-purple-600 mb-1 block">AI Analysis</span>
-                          <span className="font-medium text-gray-900">{exception.ai_analysis.likelyCause || exception.reason}</span>
+                      <div className="flex justify-between items-start gap-4">
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
+                            <Brain style={{ width: '0.875rem', height: '0.875rem', color: 'var(--ai)' }} />
+                            <span style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ai)' }}>
+                              AI Analysis
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {exception.ai_analysis.likelyCause || exception.reason}
+                          </p>
                         </div>
-                        <div className="w-32">
+                        <div style={{ width: '8rem', flexShrink: 0 }}>
                           <ConfidenceMeter confidence={exception.ai_analysis.confidence} />
                         </div>
                       </div>
-                      <p className="text-sm text-gray-700">{exception.ai_analysis.explanation}</p>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                        {exception.ai_analysis.explanation}
+                      </p>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500 flex items-center h-full">
-                      <AlertTriangle className="w-4 h-4 mr-2" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      <AlertTriangle style={{ width: '1rem', height: '1rem', color: 'var(--warning)', flexShrink: 0 }} />
                       AI analysis not available. {exception.reason}
                     </div>
                   )}
                 </div>
 
-                <div className="lg:col-span-3 flex flex-col space-y-2 justify-center">
+                {/* Actions */}
+                <div className="lg:col-span-3 flex flex-col gap-2 justify-center">
                   {exception.status === RECON_STATUS.NEEDS_REVIEW && exception.ai_analysis ? (
                     <>
-                      <button
-                        onClick={() => handleAction(exception.id, 'approve')}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
-                      >
-                        Approve Resolution
+                      <button onClick={() => handleAction(exception.id, 'approve')} className="btn-success w-full">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Approve
                       </button>
                       <button
                         onClick={() => handleAction(exception.id, 'reject')}
-                        className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium py-2 px-4 rounded transition-colors"
+                        className="btn-base w-full"
+                        style={{
+                          backgroundColor: 'var(--danger-subtle)',
+                          color: 'var(--danger)',
+                          border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)',
+                        }}
                       >
+                        <XCircle className="w-4 h-4" />
                         Reject & Flag
                       </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => handleAction(exception.id, 'mark_unresolved')}
-                      className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
-                    >
+                    <button onClick={() => handleAction(exception.id, 'mark_unresolved')} className="btn-warning w-full">
                       Investigate Manually
                     </button>
                   )}
-                  <button
-                    onClick={() => navigate(`/transactions/${exception.payment_id}`)}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 px-4 rounded transition-colors flex items-center justify-center"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Full Details
+                  <button onClick={() => navigate(`/transactions/${exception.payment_id}`)} className="btn-secondary w-full">
+                    <Eye className="w-4 h-4" />
+                    View Details
                   </button>
                 </div>
               </div>

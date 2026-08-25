@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ArrowLeftRight } from 'lucide-react';
+import { Search, Filter, ArrowLeftRight, ArrowRight } from 'lucide-react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import { getStore, isReady } from '../services/dataService';
@@ -15,8 +15,8 @@ const TransactionsPage = () => {
 
   const data = useMemo(() => {
     if (!isReady()) return [];
-    return payments.map(payment => {
-      const recon = reconciliations.find(r => r.payment_id === payment.payment_id) || {};
+    return payments.map((payment) => {
+      const recon = reconciliations.find((r) => r.payment_id === payment.payment_id) || {};
       return {
         ...payment,
         recon_status: recon.status || 'PENDING',
@@ -29,14 +29,12 @@ const TransactionsPage = () => {
   }, [payments, reconciliations]);
 
   const filteredData = useMemo(() => {
-    return data.filter(item => {
-      const matchesSearch = 
+    return data.filter((item) => {
+      const matchesSearch =
         item.payment_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
-      
       const matchesStatus = statusFilter === 'All' || item.recon_status === statusFilter;
-      
       return matchesSearch && matchesStatus;
     });
   }, [data, searchTerm, statusFilter]);
@@ -45,24 +43,46 @@ const TransactionsPage = () => {
     {
       header: 'Payment ID',
       accessor: 'payment_id',
-      cell: (value) => <span className="font-mono text-xs">{truncate(value, 15)}</span>,
+      cell: (value) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.6875rem', color: 'var(--text-secondary)' }}>
+          {truncate(value, 18)}
+        </span>
+      ),
     },
     {
-      header: 'Order ID',
-      accessor: 'order_id',
-      cell: (value) => <span className="text-gray-600">{value}</span>,
+      header: 'Customer',
+      accessor: 'customer_name',
+      cell: (value) => (
+        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{value}</span>
+      ),
+    },
+    {
+      header: 'Method',
+      accessor: 'payment_method',
+      cell: (value) => (
+        <span style={{ fontSize: '0.75rem', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>{value}</span>
+      ),
     },
     {
       header: 'Amount',
       accessor: 'amount',
-      cell: (value) => <span className="font-medium">{formatCurrency(value)}</span>,
+      cell: (value) => (
+        <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(value)}
+        </span>
+      ),
     },
     {
       header: 'Settlement',
       accessor: 'actual_amount',
       cell: (value, row) => (
-        <span className={row.difference !== 0 ? 'text-orange-600' : ''}>
-          {value !== undefined ? formatCurrency(value) : '-'}
+        <span
+          style={{
+            fontVariantNumeric: 'tabular-nums',
+            color: row.difference && row.difference !== 0 ? 'var(--warning)' : 'var(--text-secondary)',
+          }}
+        >
+          {value !== undefined ? formatCurrency(value) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
         </span>
       ),
     },
@@ -70,71 +90,83 @@ const TransactionsPage = () => {
       header: 'Diff',
       accessor: 'difference',
       cell: (value) => (
-        <span className={value !== 0 && value !== undefined ? 'text-red-600 font-medium' : 'text-gray-400'}>
-          {value !== undefined ? formatCurrency(value) : '-'}
+        <span
+          style={{
+            fontVariantNumeric: 'tabular-nums',
+            fontWeight: value !== 0 && value !== undefined ? 600 : 400,
+            color: value !== 0 && value !== undefined ? 'var(--danger)' : 'var(--text-muted)',
+          }}
+        >
+          {value !== undefined ? (value !== 0 ? formatCurrency(value) : '—') : '—'}
         </span>
       ),
     },
     {
       header: 'Status',
       accessor: 'recon_status',
-      cell: (value) => <StatusBadge status={value} />,
+      cell: (value) => <StatusBadge status={value} size="sm" />,
     },
     {
       header: 'Confidence',
       accessor: 'confidence',
       cell: (value) => (
-        <span className="text-sm">
-          {value ? formatConfidence(value) : '-'}
+        <span style={{ fontSize: '0.75rem', color: value ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
+          {value ? formatConfidence(value) : '—'}
         </span>
       ),
     },
     {
       header: 'Date',
       accessor: 'created_at',
-      cell: (value) => <span className="text-sm text-gray-500">{formatDate(value)}</span>,
+      cell: (value) => (
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(value)}</span>
+      ),
     },
   ];
 
   if (!isReady()) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg shadow border border-gray-200">
-        <ArrowLeftRight className="w-12 h-12 text-gray-400 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-700">No Data Available</h2>
-        <p className="text-gray-500 mt-2 mb-4">Generate synthetic data to view transactions.</p>
-        <button
-          onClick={() => navigate('/reconcile')}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
-        >
+      <div className="empty-state min-h-[40vh] justify-center">
+        <div className="empty-state-icon">
+          <ArrowLeftRight style={{ width: '1.5rem', height: '1.5rem' }} />
+        </div>
+        <div>
+          <p className="empty-state-title">No Data Available</p>
+          <p className="empty-state-desc">Generate synthetic data to view transactions.</p>
+        </div>
+        <button onClick={() => navigate('/reconciliation')} className="btn-primary">
           Go to Reconciliation
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 page-enter">
+      {/* Page header + controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-          <p className="text-gray-500">View and search all payment transactions.</p>
+          <h1 className="page-title">Transactions</h1>
+          <p className="page-subtitle">View and search all payment transactions.</p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="input-icon-wrapper">
+            <Search className="input-icon" />
             <input
               type="text"
-              placeholder="Search ID, Order, Customer..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full sm:w-64 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Search ID, order, customer…"
+              className="input-with-icon"
+              style={{ width: '100%', minWidth: '15rem' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="relative">
-            <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <div className="input-icon-wrapper">
+            <Filter className="input-icon" />
             <select
-              className="pl-10 pr-8 py-2 border border-gray-300 rounded-md w-full sm:w-48 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+              className="input-with-icon"
+              style={{ width: '100%', minWidth: '11rem', appearance: 'none' }}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -148,16 +180,24 @@ const TransactionsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          keyField="id"
-          onRowClick={(row) => navigate(`/transactions/${row.payment_id}`)}
-          pagination={true}
-          rowsPerPage={10}
-        />
-      </div>
+      {/* Results count */}
+      {filteredData.length !== data.length && (
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Showing{' '}
+          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{filteredData.length}</span>{' '}
+          of{' '}
+          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{data.length}</span>{' '}
+          transactions
+        </p>
+      )}
+
+      <DataTable
+        columns={columns}
+        data={filteredData}
+        onRowClick={(row) => navigate(`/transactions/${row.payment_id}`)}
+        pagination={true}
+        pageSize={15}
+      />
     </div>
   );
 };

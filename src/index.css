@@ -4,59 +4,469 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   IniRazorAI Design System — v2 with full Dark Mode support
+   Architecture: CSS Custom Properties → component classes consume vars.
+   Theme is applied by toggling the `.dark` class on <html>.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Light Mode Tokens ──────────────────────────────────────────────────── */
+:root {
+  /* App surfaces */
+  --bg-app:           #f8fafc;  /* slate-50  */
+  --bg-surface:       #ffffff;  /* white     */
+  --bg-surface-2:     #f1f5f9;  /* slate-100 */
+  --bg-surface-3:     #e2e8f0;  /* slate-200 */
+  --bg-elevated:      #ffffff;
+
+  /* Borders */
+  --border:           #e2e8f0;  /* slate-200 */
+  --border-strong:    #cbd5e1;  /* slate-300 */
+  --border-subtle:    #f1f5f9;  /* slate-100 */
+
+  /* Text */
+  --text-primary:     #0f172a;  /* slate-900 */
+  --text-secondary:   #475569;  /* slate-600 */
+  --text-muted:       #94a3b8;  /* slate-400 */
+  --text-placeholder: #cbd5e1;  /* slate-300 */
+
+  /* Brand */
+  --primary:          #2563eb;  /* blue-600  */
+  --primary-hover:    #1d4ed8;  /* blue-700  */
+  --primary-subtle:   #eff6ff;  /* blue-50   */
+  --primary-text:     #1d4ed8;  /* blue-700  */
+
+  /* Sidebar (matches surface in light) */
+  --sidebar-bg:       #ffffff;
+  --sidebar-border:   #e2e8f0;
+  --sidebar-link-hover-bg: #f1f5f9;
+  --sidebar-link-hover-text: #0f172a;
+  --sidebar-link-active-bg: #eff6ff;
+  --sidebar-link-active-text: #1d4ed8;
+
+  /* Semantic colors */
+  --success:          #10b981;
+  --success-subtle:   #ecfdf5;
+  --success-text:     #065f46;
+  --warning:          #f59e0b;
+  --warning-subtle:   #fffbeb;
+  --warning-text:     #92400e;
+  --danger:           #ef4444;
+  --danger-subtle:    #fef2f2;
+  --danger-text:      #991b1b;
+  --ai:               #7c3aed;
+  --ai-subtle:        #f5f3ff;
+  --ai-text:          #5b21b6;
+
+  /* Table */
+  --table-header-bg:  #f8fafc;
+
+  /* Shadows */
+  --shadow-card:      0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg:        0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #cbd5e1;
+
+  /* Animation timing */
+  --theme-transition: background-color 200ms ease, border-color 200ms ease, color 150ms ease;
+}
+
+/* ─── Dark Mode Tokens ───────────────────────────────────────────────────── */
+/* Premium dark: deep blue-gray (not pure black), layered surfaces             */
+.dark {
+  /* App surfaces — layered navy-gray system */
+  --bg-app:           #0e1117;  /* very deep blue-gray */
+  --bg-surface:       #161b25;  /* card surface        */
+  --bg-surface-2:     #1c2333;  /* elevated surface    */
+  --bg-surface-3:     #242d3d;  /* input/hover bg      */
+  --bg-elevated:      #1e2536;
+
+  /* Borders — subtle but visible */
+  --border:           #2d3a52;
+  --border-strong:    #3d4f6b;
+  --border-subtle:    #1f2d40;
+
+  /* Text — warm white hierarchy */
+  --text-primary:     #e2e8f0;  /* slate-200 */
+  --text-secondary:   #8ba3c4;  /* muted blue-gray */
+  --text-muted:       #4d6280;
+  --text-placeholder: #3a5070;
+
+  /* Brand — slightly brighter for dark bg */
+  --primary:          #3b82f6;  /* blue-500  */
+  --primary-hover:    #60a5fa;  /* blue-400  */
+  --primary-subtle:   #172554;  /* blue-950  */
+  --primary-text:     #93c5fd;  /* blue-300  */
+
+  /* Sidebar — deeper than card surface */
+  --sidebar-bg:       #111827;  /* true dark sidebar */
+  --sidebar-border:   #1e293b;
+  --sidebar-link-hover-bg: #1e2d40;
+  --sidebar-link-hover-text: #e2e8f0;
+  --sidebar-link-active-bg: #172554;
+  --sidebar-link-active-text: #93c5fd;
+
+  /* Semantic — adjusted for dark readability */
+  --success:          #34d399;
+  --success-subtle:   #064e3b;
+  --success-text:     #6ee7b7;
+  --warning:          #fbbf24;
+  --warning-subtle:   #451a03;
+  --warning-text:     #fcd34d;
+  --danger:           #f87171;
+  --danger-subtle:    #450a0a;
+  --danger-text:      #fca5a5;
+  --ai:               #a78bfa;
+  --ai-subtle:        #2e1065;
+  --ai-text:          #c4b5fd;
+
+  /* Table */
+  --table-header-bg:  #131a27;
+
+  /* Shadows — glow-based for dark bg */
+  --shadow-card:      0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-card-hover: 0 4px 12px 0 rgb(0 0 0 / 0.5);
+  --shadow-lg:        0 10px 25px -5px rgb(0 0 0 / 0.6);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #2d3a52;
+}
+
+/* ─── Base styles ────────────────────────────────────────────────────────── */
 @layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: var(--theme-transition);
+  }
+
+  /* Themed scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 999px;
+  }
+
+  /* Focus ring reset — use our primary color */
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
+/* ─── Component classes — all themed via CSS vars ────────────────────────── */
 @layer components {
+
+  /* ── Card ───────────────────────────────────────────────────────────────── */
   .card {
-    @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+    background-color: var(--bg-surface);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    transition: var(--theme-transition), box-shadow 200ms ease;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-card-hover);
   }
   .card-header {
-    @apply px-6 py-4 border-b border-slate-200;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
   }
   .card-body {
-    @apply px-6 py-4;
+    padding: 1.25rem 1.5rem;
+  }
+
+  /* ── Page headers ───────────────────────────────────────────────────────── */
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+  }
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.125rem;
+  }
+
+  /* ── Buttons ────────────────────────────────────────────────────────────── */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 font-medium px-4 py-2 rounded-lg
+           text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed
+           focus-visible:outline-2 focus-visible:outline-offset-2;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-base:active:not(:disabled) {
+    transform: scale(0.98);
   }
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply btn-base;
+    background-color: var(--primary);
+    color: #ffffff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
   }
   .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2;
+    @apply btn-base;
+    background-color: var(--bg-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--bg-surface-2);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
   }
   .btn-success {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2;
+    @apply btn-base bg-emerald-600 hover:bg-emerald-500 text-white;
+  }
+  .dark .btn-success {
+    @apply bg-emerald-700 hover:bg-emerald-600;
   }
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2;
+    @apply btn-base bg-red-600 hover:bg-red-500 text-white;
   }
   .btn-warning {
-    @apply bg-amber-500 hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 flex items-center gap-2;
+    @apply btn-base bg-amber-500 hover:bg-amber-400 text-white;
   }
+  .btn-ghost {
+    @apply btn-base;
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--bg-surface-2);
+    color: var(--text-primary);
+  }
+
+  /* ── Form inputs ────────────────────────────────────────────────────────── */
   .input {
-    @apply w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    transition: var(--theme-transition), box-shadow 150ms ease;
   }
+  .input::placeholder {
+    color: var(--text-placeholder);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+  .input:hover:not(:focus) {
+    border-color: var(--border-strong);
+  }
+  .input-icon-wrapper {
+    position: relative;
+  }
+  .input-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+  }
+  .input-with-icon {
+    @apply input;
+    padding-left: 2.25rem;
+  }
+
+  /* ── Badge ──────────────────────────────────────────────────────────────── */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+
+  /* ── Sidebar ────────────────────────────────────────────────────────────── */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 150ms ease, color 150ms ease;
   }
   .sidebar-link-active {
-    @apply bg-primary-50 text-primary-700;
+    background-color: var(--sidebar-link-active-bg);
+    color: var(--sidebar-link-active-text);
   }
   .sidebar-link-inactive {
-    @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+    color: var(--text-muted);
   }
-  .kpi-card {
-    @apply card p-6 flex flex-col;
+  .sidebar-link-inactive:hover {
+    background-color: var(--sidebar-link-hover-bg);
+    color: var(--sidebar-link-hover-text);
   }
+
+  /* ── Table ──────────────────────────────────────────────────────────────── */
   .table-header {
-    @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background-color: var(--table-header-bg);
+    white-space: nowrap;
+    transition: var(--theme-transition);
   }
   .table-cell {
-    @apply px-4 py-3 text-sm text-slate-700;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: var(--theme-transition);
   }
+  .table-row {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 100ms ease;
+  }
+  .table-row:hover {
+    background-color: var(--bg-surface-2);
+  }
+
+  /* ── Skeleton / loading ─────────────────────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--bg-surface-2) 25%,
+      var(--bg-surface-3) 37%,
+      var(--bg-surface-2) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+    border-radius: 0.375rem;
+  }
+  @keyframes skeleton-shimmer {
+    0%   { background-position: 100% 50%; }
+    100% { background-position:   0% 50%; }
+  }
+
+  /* ── Page entrance animation ─────────────────────────────────────────────── */
+  .page-enter {
+    animation: page-fade-up 250ms ease both;
+  }
+  @keyframes page-fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+
+  /* ── Staggered card grid animation ─────────────────────────────────────── */
+  .stagger-enter > * {
+    opacity: 0;
+    animation: card-enter 280ms ease both;
+  }
+  .stagger-enter > *:nth-child(1)  { animation-delay:  0ms; }
+  .stagger-enter > *:nth-child(2)  { animation-delay: 40ms; }
+  .stagger-enter > *:nth-child(3)  { animation-delay: 80ms; }
+  .stagger-enter > *:nth-child(4)  { animation-delay:120ms; }
+  .stagger-enter > *:nth-child(5)  { animation-delay:160ms; }
+  .stagger-enter > *:nth-child(6)  { animation-delay:200ms; }
+  .stagger-enter > *:nth-child(7)  { animation-delay:240ms; }
+  .stagger-enter > *:nth-child(8)  { animation-delay:280ms; }
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+
+  /* ── Section label ──────────────────────────────────────────────────────── */
+  .section-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 0 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── KPI card ───────────────────────────────────────────────────────────── */
+  .kpi-card {
+    @apply card;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* ── Empty state ────────────────────────────────────────────────────────── */
+  .empty-state {
+    @apply card;
+    padding: 4rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .empty-state-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    background-color: var(--bg-surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+  }
+  .empty-state-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .empty-state-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    max-width: 28rem;
+  }
+}
+
+/* ─── Recharts dark mode overrides ──────────────────────────────────────── */
+.dark .recharts-text,
+.dark .recharts-legend-item-text {
+  fill: var(--text-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+.dark .recharts-cartesian-axis-line,
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: var(--border) !important;
+}
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--bg-surface-2) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
 }

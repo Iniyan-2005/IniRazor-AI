@@ -1,91 +1,151 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
+/**
+ * DataTable — Dark mode aware via CSS vars in component classes.
+ *
+ * Column definition accepts either:
+ *   { key, label, render, sortable, className }       ← original API
+ *   { accessor, header, cell, sortable, className }   ← alias API used by some pages
+ */
+const normaliseCol = (col) => ({
+  key:       col.key       ?? col.accessor ?? '',
+  label:     col.label     ?? col.header   ?? '',
+  render:    col.render    ?? col.cell     ?? null,
+  sortable:  col.sortable  ?? false,
+  className: col.className ?? '',
+});
+
 const DataTable = ({
-  columns,
+  columns = [],
   data = [],
   onRowClick,
   loading = false,
   emptyMessage = 'No data available',
   pagination = true,
-  pageSize = 20
+  pageSize = 20,
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
 
+  const normalisedCols = useMemo(() => columns.map(normaliseCol), [columns]);
+
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+    setSortConfig((prev) =>
+      prev.key === key && prev.direction === 'asc'
+        ? { key, direction: 'desc' }
+        : { key, direction: 'asc' }
+    );
+    setCurrentPage(1);
   };
 
   const sortedData = useMemo(() => {
-    let sortableItems = [...data];
-    if (sortConfig.key !== null) {
-      sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return sortableItems;
+    if (!sortConfig.key) return [...data];
+    return [...data].sort((a, b) => {
+      const av = a[sortConfig.key];
+      const bv = b[sortConfig.key];
+      if (av < bv) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (av > bv) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
   }, [data, sortConfig]);
 
   const totalPages = Math.ceil(sortedData.length / pageSize);
-  const currentData = pagination 
+  const currentData = pagination
     ? sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
     : sortedData;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    <div
+      style={{
+        backgroundColor: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: '0.75rem',
+        boxShadow: 'var(--shadow-card)',
+        overflow: 'hidden',
+      }}
+    >
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
+          {/* Head */}
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              {columns.map((col, i) => (
-                <th 
-                  key={i} 
-                  className={`table-header p-3 text-sm font-medium text-slate-600 ${col.sortable ? 'cursor-pointer select-none hover:bg-slate-100' : ''} ${col.className || ''}`}
+            <tr>
+              {normalisedCols.map((col, i) => (
+                <th
+                  key={i}
+                  className={`table-header ${
+                    col.sortable
+                      ? 'cursor-pointer select-none transition-colors'
+                      : ''
+                  } ${col.className}`}
                   onClick={() => col.sortable && handleSort(col.key)}
+                  style={
+                    col.sortable
+                      ? {
+                          ':hover': { backgroundColor: 'var(--bg-surface-3)' },
+                        }
+                      : {}
+                  }
                 >
                   <div className="flex items-center gap-1">
                     {col.label}
                     {col.sortable && sortConfig.key === col.key && (
-                      sortConfig.direction === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        {sortConfig.direction === 'asc' ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </span>
                     )}
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
+
+          {/* Body */}
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-100 animate-pulse">
-                  {columns.map((_, j) => (
-                    <td key={j} className="p-3">
-                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                <tr
+                  key={i}
+                  style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                >
+                  {normalisedCols.map((_, j) => (
+                    <td key={j} style={{ padding: '0.75rem 1rem' }}>
+                      <div
+                        className="skeleton"
+                        style={{ height: '1rem', width: '75%' }}
+                      />
                     </td>
                   ))}
                 </tr>
               ))
             ) : currentData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="p-8 text-center text-slate-500">
+                <td
+                  colSpan={normalisedCols.length}
+                  style={{
+                    padding: '3rem 1rem',
+                    textAlign: 'center',
+                    fontSize: '0.875rem',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
-              currentData.map((row, rowIndex) => (
-                <tr 
-                  key={rowIndex} 
-                  className={`border-b border-slate-100 hover:bg-slate-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+              currentData.map((row, rowIdx) => (
+                <tr
+                  key={rowIdx}
+                  className="table-row"
+                  style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                   onClick={() => onRowClick && onRowClick(row)}
                 >
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className={`table-cell p-3 text-sm text-slate-700 ${col.className || ''}`}>
+                  {normalisedCols.map((col, colIdx) => (
+                    <td key={colIdx} className={`table-cell ${col.className}`}>
                       {col.render ? col.render(row[col.key], row) : row[col.key]}
                     </td>
                   ))}
@@ -95,24 +155,63 @@ const DataTable = ({
           </tbody>
         </table>
       </div>
-      
+
+      {/* Pagination */}
       {pagination && totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-          <span className="text-sm text-slate-600">
-            Page {currentPage} of {totalPages}
+        <div
+          className="px-4 py-3 flex items-center justify-between"
+          style={{
+            borderTop: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--table-header-bg)',
+          }}
+        >
+          <span
+            style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}
+          >
+            Page{' '}
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+              {currentPage}
+            </span>{' '}
+            of {totalPages} · {' '}
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+              {sortedData.length}
+            </span>{' '}
+            records
           </span>
-          <div className="flex gap-1">
-            <button 
+          <div className="flex items-center gap-1.5">
+            <button
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="px-3 py-1 rounded border border-slate-300 bg-white text-sm disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--bg-surface)',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                opacity: currentPage === 1 ? 0.4 : 1,
+                transition: 'all 150ms ease',
+              }}
             >
               Previous
             </button>
-            <button 
+            <button
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="px-3 py-1 rounded border border-slate-300 bg-white text-sm disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '0.5rem',
+                border: '1px solid var(--border)',
+                backgroundColor: 'var(--bg-surface)',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                opacity: currentPage === totalPages ? 0.4 : 1,
+                transition: 'all 150ms ease',
+              }}
             >
               Next
             </button>
