@@ -38,11 +38,11 @@ const ExceptionBreakdownChart = ({ stats }) => {
         Exception Breakdown
       </h3>
       <div style={{ height: '16rem' }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer key={theme} width="100%" height="100%">
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={gridColor} />
             <XAxis
@@ -54,7 +54,7 @@ const ExceptionBreakdownChart = ({ stats }) => {
             <YAxis
               dataKey="name"
               type="category"
-              width={130}
+              width={120}
               tick={{ fontSize: 11, fill: axisColor }}
               axisLine={{ stroke: gridColor }}
               tickLine={false}

@@ -82,7 +82,19 @@ const ExceptionsPage = () => {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', borderBottom: '1px solid var(--border)' }}>
+      <div 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.25rem', 
+          borderBottom: '1px solid var(--border)',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
+        className="hide-scrollbar"
+      >
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -102,6 +114,7 @@ const ExceptionsPage = () => {
                 transition: 'color 150ms ease, border-color 150ms ease',
                 background: 'none',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
               <tab.icon style={{ width: '0.875rem', height: '0.875rem' }} />

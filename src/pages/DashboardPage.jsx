@@ -53,7 +53,7 @@ const DashboardPage = () => {
           <h1 className="page-title">Overview</h1>
           <p className="page-subtitle">AI-powered reconciliation insights for your payment operations.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <button onClick={() => navigate('/evaluation')} className="btn-secondary">
             View Evaluation
           </button>

@@ -47,26 +47,22 @@ const AuditTrailPage = () => {
 
       <div className="card">
         {/* Filters */}
-        <div
-          className="card-header flex flex-col sm:flex-row justify-between gap-3"
-          style={{ alignItems: 'flex-start' }}
-        >
-          <div className="input-icon-wrapper" style={{ flex: 1 }}>
+        <div className="card-header flex flex-col sm:flex-row gap-3 sm:items-center">
+          <div className="input-icon-wrapper w-full sm:flex-1">
             <Search className="input-icon" />
             <input
               type="text"
               placeholder="Search by ID or description…"
-              className="input-with-icon"
-              style={{ width: '100%' }}
+              className="input-with-icon w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="input-icon-wrapper" style={{ width: '100%', maxWidth: '14rem' }}>
+          <div className="input-icon-wrapper w-full sm:w-56">
             <Filter className="input-icon" />
             <select
-              className="input-with-icon"
-              style={{ width: '100%', appearance: 'none' }}
+              className="input-with-icon w-full"
+              style={{ appearance: 'none' }}
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >

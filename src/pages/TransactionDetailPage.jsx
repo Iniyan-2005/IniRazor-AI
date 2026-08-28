@@ -269,7 +269,7 @@ const TransactionDetailPage = () => {
                   {statusLabel(recon.ai_analysis.classification)}
                 </p>
               </div>
-              <div style={{ width: '16rem' }}>
+              <div style={{ width: '100%', maxWidth: '16rem' }}>
                 <h3 style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.375rem' }}>
                   Confidence
                 </h3>

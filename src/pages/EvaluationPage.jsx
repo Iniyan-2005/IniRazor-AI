@@ -106,7 +106,7 @@ const EvaluationPage = () => {
         </div>
         <div className="card-body">
           <div className="overflow-x-auto">
-            <table style={{ width: '100%', maxWidth: '40rem', margin: '0 auto', fontSize: '0.875rem' }}>
+            <table style={{ width: '100%', minWidth: '32rem', maxWidth: '40rem', margin: '0 auto', fontSize: '0.875rem' }}>
               <thead>
                 <tr>
                   <th style={{ padding: '1rem', textAlign: 'right' }} />

@@ -42,7 +42,7 @@ const ReconciliationStatusChart = ({ stats }) => {
         Reconciliation Status Distribution
       </h3>
       <div style={{ height: '16rem' }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer key={theme} width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}

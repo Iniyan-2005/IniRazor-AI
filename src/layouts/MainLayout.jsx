@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -9,6 +9,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import EnvironmentBadge from '../components/EnvironmentBadge.jsx';
@@ -39,6 +41,12 @@ const PAGE_TITLES = {
 const MainLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const pageTitle = (() => {
     const exact = PAGE_TITLES[location.pathname];
@@ -49,14 +57,27 @@ const MainLayout = () => {
     return prefix ? PAGE_TITLES[prefix] : 'IniRazorAI';
   })();
 
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+
   return (
     <div
       className="flex h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--bg-app)' }}
     >
+      {/* ── Mobile Overlay ─────────────────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside
-        className="w-60 flex flex-col flex-shrink-0"
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out lg:transform-none ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
         style={{
           backgroundColor: 'var(--sidebar-bg)',
           borderRight: '1px solid var(--sidebar-border)',
@@ -64,25 +85,35 @@ const MainLayout = () => {
       >
         {/* Brand */}
         <div
-          className="h-16 flex items-center gap-3 px-4 flex-shrink-0"
+          className="h-16 flex items-center justify-between gap-3 px-4 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--sidebar-border)' }}
         >
-          <img
-            src={logo}
-            alt="IniRazorAI Logo"
-            className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
-          />
-          <div className="min-w-0">
-            <p
-              className="font-bold text-sm leading-tight truncate"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              IniRazorAI
-            </p>
-            <p className="text-[11px] leading-tight" style={{ color: 'var(--text-muted)' }}>
-              AI Finance Controller
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              src={logo}
+              alt="IniRazorAI Logo"
+              className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p
+                className="font-bold text-sm leading-tight truncate"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                IniRazorAI
+              </p>
+              <p className="text-[11px] leading-tight" style={{ color: 'var(--text-muted)' }}>
+                AI Finance Controller
+              </p>
+            </div>
           </div>
+          {/* Close button for mobile */}
+          <button 
+            className="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -150,26 +181,35 @@ const MainLayout = () => {
       </aside>
 
       {/* ── Main area ─────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full">
         {/* Top bar */}
         <header
-          className="h-16 px-6 flex items-center justify-between flex-shrink-0 sticky top-0 z-10"
+          className="h-16 px-4 sm:px-6 flex items-center justify-between flex-shrink-0 sticky top-0 z-10"
           style={{
             backgroundColor: 'var(--bg-surface)',
             borderBottom: '1px solid var(--border)',
           }}
         >
-          <h2
-            className="text-base font-semibold truncate"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {pageTitle}
-          </h2>
+          <div className="flex items-center gap-3 min-w-0">
+            <button 
+              className="lg:hidden p-2 -ml-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
+              onClick={toggleMobileMenu}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+            </button>
+            <h2
+              className="text-base font-semibold truncate"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {pageTitle}
+            </h2>
+          </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Operational status */}
             <div
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
               style={{
                 backgroundColor: 'var(--success-subtle)',
                 color: 'var(--success-text)',
@@ -177,7 +217,7 @@ const MainLayout = () => {
               }}
             >
               <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
                 style={{ backgroundColor: 'var(--success)' }}
               />
               Operational
@@ -190,10 +230,12 @@ const MainLayout = () => {
 
         {/* Page content */}
         <main
-          className="flex-1 p-6 overflow-auto"
+          className="flex-1 p-4 sm:p-6 overflow-auto"
           style={{ backgroundColor: 'var(--bg-app)' }}
         >
-          <Outlet />
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

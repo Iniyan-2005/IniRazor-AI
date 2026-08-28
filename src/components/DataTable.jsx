@@ -66,7 +66,7 @@ const DataTable = ({
       }}
     >
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse" style={{ minWidth: '48rem' }}>
           {/* Head */}
           <thead>
             <tr>
@@ -159,7 +159,7 @@ const DataTable = ({
       {/* Pagination */}
       {pagination && totalPages > 1 && (
         <div
-          className="px-4 py-3 flex items-center justify-between"
+          className="px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3"
           style={{
             borderTop: '1px solid var(--border-subtle)',
             backgroundColor: 'var(--table-header-bg)',
@@ -178,12 +178,12 @@ const DataTable = ({
             </span>{' '}
             records
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               style={{
-                padding: '0.25rem 0.75rem',
+                padding: '0.375rem 0.75rem',
                 borderRadius: '0.5rem',
                 border: '1px solid var(--border)',
                 backgroundColor: 'var(--bg-surface)',
@@ -201,7 +201,7 @@ const DataTable = ({
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               style={{
-                padding: '0.25rem 0.75rem',
+                padding: '0.375rem 0.75rem',
                 borderRadius: '0.5rem',
                 border: '1px solid var(--border)',
                 backgroundColor: 'var(--bg-surface)',
