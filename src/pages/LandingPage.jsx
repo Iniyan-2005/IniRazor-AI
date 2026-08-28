@@ -105,12 +105,52 @@ const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [activeInsight, setActiveInsight] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(true);
   const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const insightData = [
+    {
+      q: "Why did my expenses increase this month?",
+      headline: "Your expenses increased by",
+      highlight: "18.4%",
+      amount: "(₹1,42,000)",
+      color: "text-red-500",
+      subtext: "The largest contributors were:",
+      breakdown: [
+        { name: 'Marketing', val: '+32%', icon: TrendingUp },
+        { name: 'Infrastructure', val: '+14%', icon: TrendingUp },
+        { name: 'Software', val: '+9%', icon: TrendingUp }
+      ],
+      summary: "The increase is primarily driven by higher campaign spending on Meta Ads."
+    },
+    {
+      q: "What's our current runway?",
+      headline: "Based on current burn, runway is",
+      highlight: "14 months",
+      amount: "(extended by 2m)",
+      color: "text-emerald-500",
+      subtext: "Key runway factors:",
+      breakdown: [
+        { name: 'Cash Balance', val: '₹1.2Cr', icon: Database },
+        { name: 'Avg Burn', val: '₹8.5L/mo', icon: AlertTriangle },
+        { name: 'Revenue Trend', val: '+12% MoM', icon: TrendingUp }
+      ],
+      summary: "Runway is healthy, primarily extended by recent consistent revenue growth."
+    }
+  ];
 
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] } }
   };
 
   const staggerContainer = {
@@ -118,14 +158,14 @@ const LandingPage = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.15
       }
     }
   };
 
   const staggerItem = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.1, 0.25, 1] } }
   };
 
   // Welcome Popup Logic
@@ -273,29 +313,31 @@ const LandingPage = () => {
             <motion.div 
               initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
               className="relative mx-auto w-full max-w-lg lg:max-w-none"
             >
               <div className="relative aspect-square sm:aspect-[4/3] rounded-2xl overflow-hidden border bg-[var(--bg-surface-2)] border-[var(--border)]">
                 <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, var(--text-primary) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
                 
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ scale: prefersReducedMotion ? 1 : [1, 1.05, 1] }} 
-                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                    className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-md border border-white/10" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}
-                  >
-                    <Brain className="w-10 h-10 text-white" />
-                    <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                  <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.0, duration: 0.6, type: 'spring' }} className="relative z-10">
+                    <motion.div 
+                      animate={{ scale: prefersReducedMotion ? 1 : [1, 1.05, 1] }} 
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="w-20 h-20 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-md border border-white/10" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}
+                    >
+                      <Brain className="w-10 h-10 text-white" />
+                      <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
+                    </motion.div>
                   </motion.div>
 
-                  <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 400" preserveAspectRatio="none">
+                  <motion.svg initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} transition={{ delay: 0.6, duration: 1 }} className="absolute inset-0 w-full h-full" viewBox="0 0 400 400" preserveAspectRatio="none">
                     <path d="M 0,200 C 150,200 250,100 400,100" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_20s_linear_infinite]"} vectorEffect="non-scaling-stroke" />
                     <path d="M 0,350 C 150,350 250,250 400,250" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_15s_linear_infinite]"} vectorEffect="non-scaling-stroke" />
-                  </svg>
+                  </motion.svg>
                   
                   <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.4, duration: 0.5 }}
                     className={`absolute top-4 sm:top-8 right-2 sm:right-8 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_6s_ease-in-out_infinite]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--success-subtle)] text-[var(--success)]">
@@ -308,7 +350,7 @@ const LandingPage = () => {
                   </motion.div>
                   
                   <motion.div 
-                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}
+                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.6, duration: 0.5 }}
                     className={`absolute bottom-16 sm:bottom-12 left-2 sm:left-6 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_7s_ease-in-out_infinite_reverse]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--warning-subtle)] text-[var(--warning)]">
@@ -321,7 +363,7 @@ const LandingPage = () => {
                   </motion.div>
                   
                   <motion.div 
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.8, duration: 0.5 }}
                     className={`absolute bottom-2 sm:bottom-6 right-2 sm:right-10 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_8s_ease-in-out_infinite]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--ai-subtle)] text-[var(--ai)]">
@@ -422,7 +464,14 @@ const LandingPage = () => {
               { icon: Brain, num: '02 — Analyze', title: 'Analyze', desc: 'AI analyzes patterns, trends, anomalies, and financial behavior instantly.', color: 'var(--ai)' },
               { icon: LineChart, num: '03 — Understand', title: 'Understand', desc: 'Receive clear explanations and highly actionable financial insights.', color: 'var(--success)' }
             ].map((step, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2 }} viewport={{ once: true }} className="relative z-10 flex flex-col items-center text-center group">
+              <motion.div 
+                key={i} 
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: isDesktop ? -30 : 0, y: isDesktop ? 0 : 20 }} 
+                whileInView={{ opacity: 1, x: 0, y: 0 }} 
+                transition={{ duration: 0.6, delay: i * 0.2 }} 
+                viewport={{ once: true }} 
+                className="relative z-10 flex flex-col items-center text-center group"
+              >
                 <div className="w-24 h-24 rounded-2xl flex items-center justify-center mb-6 shadow-md transition-transform group-hover:-translate-y-1 bg-[var(--bg-surface)] border border-[var(--border)]">
                   <step.icon className="w-10 h-10" style={{ color: step.color }} />
                 </div>
@@ -572,45 +621,57 @@ const LandingPage = () => {
                 </div>
 
                 <div className="p-5 space-y-6" style={{ backgroundImage: 'radial-gradient(circle at center, var(--bg-surface-2) 0%, transparent 100%)' }}>
-                  <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm bg-[var(--bg-surface-2)]">
-                      Why did my expenses increase this month?
-                    </div>
-                  </motion.div>
-
-                  <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} viewport={{ once: true }} className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1 shadow-sm" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}>
-                      <Brain className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="space-y-3 w-full">
-                      <div className="rounded-2xl rounded-tl-sm p-4 shadow-sm border bg-[var(--bg-surface)] border-[var(--border-subtle)]">
-                        <p className="text-sm font-medium mb-3">
-                          Your expenses increased by <span className="text-red-500">18.4%</span> (₹1,42,000).
-                        </p>
-                        <p className="text-sm mb-3 text-[var(--text-secondary)]">The largest contributors were:</p>
-                        <div className="space-y-2 mb-3">
-                          {[{ name: 'Marketing', val: '+32%' }, { name: 'Infrastructure', val: '+14%' }, { name: 'Software', val: '+9%' }].map((it, i) => (
-                            <div key={i} className="flex justify-between items-center text-sm p-2 rounded bg-[var(--bg-surface-2)]">
-                              <span className="font-medium flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5 text-red-500"/> {it.name}</span>
-                              <span className="font-mono text-red-500">{it.val}</span>
-                            </div>
-                          ))}
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      key={`chat-${activeInsight}`}
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-6"
+                    >
+                      <div className="flex justify-end">
+                        <div className="max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm bg-[var(--bg-surface-2)]">
+                          {insightData[activeInsight].q}
                         </div>
-                        <p className="text-sm font-medium pt-2 border-t border-[var(--border-subtle)]">
-                          The increase is primarily driven by higher campaign spending on Meta Ads.
-                        </p>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        <span className="text-xs px-3 py-1.5 rounded-full border cursor-pointer hover:bg-[var(--bg-surface-2)] transition-colors border-[var(--border)] text-[var(--text-secondary)]">
-                          Show marketing breakdown
-                        </span>
-                        <span className="text-xs px-3 py-1.5 rounded-full border cursor-pointer hover:bg-[var(--bg-surface-2)] transition-colors border-[var(--border)] text-[var(--text-secondary)]">
-                          Compare to last year
-                        </span>
+
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1 shadow-sm" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}>
+                          <Brain className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="space-y-3 w-full">
+                          <div className="rounded-2xl rounded-tl-sm p-4 shadow-sm border bg-[var(--bg-surface)] border-[var(--border-subtle)]">
+                            <p className="text-sm font-medium mb-3">
+                              {insightData[activeInsight].headline} <span className={insightData[activeInsight].color}>{insightData[activeInsight].highlight}</span> {insightData[activeInsight].amount}.
+                            </p>
+                            <p className="text-sm mb-3 text-[var(--text-secondary)]">{insightData[activeInsight].subtext}</p>
+                            <div className="space-y-2 mb-3">
+                              {insightData[activeInsight].breakdown.map((it, i) => (
+                                <div key={i} className="flex justify-between items-center text-sm p-2 rounded bg-[var(--bg-surface-2)]">
+                                  <span className="font-medium flex items-center gap-2"><it.icon className={`w-3.5 h-3.5 ${insightData[activeInsight].color}`}/> {it.name}</span>
+                                  <span className={`font-mono ${insightData[activeInsight].color}`}>{it.val}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-sm font-medium pt-2 border-t border-[var(--border-subtle)]">
+                              {insightData[activeInsight].summary}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </AnimatePresence>
+                  
+                  <div className="flex gap-2 justify-end border-t border-[var(--border-subtle)] pt-4 mt-2">
+                    <span className="text-xs text-[var(--text-muted)] self-center mr-auto">Suggested queries:</span>
+                    <button onClick={() => setActiveInsight(0)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeInsight === 0 ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'}`}>
+                      Expenses
+                    </button>
+                    <button onClick={() => setActiveInsight(1)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeInsight === 1 ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'}`}>
+                      Runway
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="px-5 py-3 border-t flex items-center gap-3 border-[var(--border)] bg-[var(--bg-surface-2)]">
