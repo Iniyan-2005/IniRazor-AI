@@ -15,20 +15,20 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
-// Environment mode detection
-export function getEnvironmentMode() {
+// Infrastructure detection
+export function getInfrastructureMode() {
   if (isSupabaseConfigured) {
     return 'SUPABASE_CONNECTED'
   }
-  return 'DEMO_MODE'
+  return 'NOT_CONFIGURED'
 }
 
-export function getEnvironmentLabel() {
-  const mode = getEnvironmentMode()
+export function getInfrastructureLabel() {
+  const mode = getInfrastructureMode()
   switch (mode) {
     case 'SUPABASE_CONNECTED':
-      return 'Razorpay Test Mode'
+      return 'Connected'
     default:
-      return 'Demo Mode'
+      return 'Not Configured'
   }
 }

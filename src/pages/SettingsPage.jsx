@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { getConfig, updateConfig } from '../services/dataService';
-import { getEnvironmentLabel, isSupabaseConfigured } from '../services/supabase';
+import { getConfig, updateConfig, getActiveDataset } from '../services/dataService';
+import { getInfrastructureLabel, isSupabaseConfigured } from '../services/supabase';
 import { getAIMode } from '../services/aiService';
 import { Settings, Save, Shield, Database, Brain, CreditCard, CheckCircle2, XCircle, Zap, MousePointer2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCursorContext } from '../contexts/CursorContext.jsx';
 
 const SettingsPage = () => {
@@ -17,27 +18,39 @@ const SettingsPage = () => {
 
   const integrations = [
     {
-      name: 'Supabase (PostgreSQL)',
+      name: 'Supabase Database',
       icon: Database,
       connected: isSupabaseConfigured,
-      status: isSupabaseConfigured ? 'Connected' : 'Not Configured (Using In-Memory)',
+      status: isSupabaseConfigured ? 'Connected' : 'Not Configured',
       detail: isSupabaseConfigured ? import.meta.env.VITE_SUPABASE_URL : 'Add VITE_SUPABASE_URL to .env',
     },
     {
       name: 'AI Provider (Gemini)',
       icon: Brain,
       connected: isSupabaseConfigured,
-      status: getAIMode(),
+      status: isSupabaseConfigured ? 'Connected' : 'Not Configured',
       detail: isSupabaseConfigured ? 'Edge Function → Gemini API' : 'Using rule-based mock responses',
     },
     {
       name: 'Razorpay',
       icon: CreditCard,
       connected: isSupabaseConfigured,
-      status: isSupabaseConfigured ? 'Razorpay Test Mode' : 'Demo Mode (Synthetic Data)',
-      detail: isSupabaseConfigured ? 'Edge Function → Razorpay Test API' : 'Using 500 synthetic records',
+      status: isSupabaseConfigured ? 'Connected — Test Mode' : 'Not Configured',
+      detail: isSupabaseConfigured ? 'Edge Function → Razorpay Test API' : 'No connection available',
     },
   ];
+
+  const navigate = useNavigate();
+  const dataset = getActiveDataset();
+  let datasetLabel = 'No Data Loaded';
+  let datasetDetail = 'Go to Reconciliation to load data.';
+  if (dataset === 'SYNTHETIC') {
+    datasetLabel = 'Synthetic Demo Data';
+    datasetDetail = 'Using generated 500 records.';
+  } else if (dataset === 'RAZORPAY') {
+    datasetLabel = 'Razorpay Test Data';
+    datasetDetail = 'Live records synced from Razorpay Test API.';
+  }
 
   const labelStyle = {
     display: 'block',
@@ -88,13 +101,57 @@ const SettingsPage = () => {
         />
         <div>
           <p style={{ fontWeight: 600, color: isSupabaseConfigured ? 'var(--primary-text)' : 'var(--warning-text)' }}>
-            {getEnvironmentLabel()}
+            System Integration: {getInfrastructureLabel()}
           </p>
           <p style={{ fontSize: '0.875rem', color: isSupabaseConfigured ? 'var(--primary-text)' : 'var(--warning-text)', opacity: 0.8, marginTop: '0.125rem' }}>
             {isSupabaseConfigured
               ? 'Connected to Supabase + Gemini AI + Razorpay Test Mode'
-              : 'All features work locally with synthetic data and mock AI'}
+              : 'Integrations not configured. Core engine will work offline.'}
           </p>
+        </div>
+      </div>
+
+      {/* Current Data Source */}
+      <div className="card">
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Database style={{ width: '1.125rem', height: '1.125rem', color: 'var(--text-muted)' }} />
+            <h2 style={cardTitleStyle}>Current Dataset</h2>
+          </div>
+          <button onClick={() => navigate('/reconciliation')} className="btn-primary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}>
+            Go to Data Loading
+          </button>
+        </div>
+        <div className="card-body">
+          <div
+            style={{
+              padding: '1rem',
+              border: '1px solid var(--border)',
+              borderRadius: '0.75rem',
+              backgroundColor: 'var(--bg-surface-2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}
+          >
+            <div
+              style={{
+                padding: '0.5rem',
+                borderRadius: '0.5rem',
+                backgroundColor: dataset ? (dataset === 'SYNTHETIC' ? 'var(--warning-subtle)' : 'var(--success-subtle)') : 'var(--bg-surface-3)',
+              }}
+            >
+              <Database style={{ width: '1.125rem', height: '1.125rem', color: dataset ? (dataset === 'SYNTHETIC' ? 'var(--warning)' : 'var(--success)') : 'var(--text-muted)' }} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {datasetLabel}
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>
+                {datasetDetail}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import { getEnvironmentLabel, isSupabaseConfigured } from '../services/supabase.js';
+import { getInfrastructureLabel, isSupabaseConfigured } from '../services/supabase.js';
 import { FlaskConical, Zap } from 'lucide-react';
 
 const EnvironmentBadge = () => {
-  const label = getEnvironmentLabel();
+  const label = getInfrastructureLabel();
   const isLive = isSupabaseConfigured;
 
   return (
