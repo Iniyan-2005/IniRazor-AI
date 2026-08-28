@@ -9,12 +9,13 @@ import ExceptionBreakdownChart from '../charts/ExceptionBreakdownChart';
 import ProcessingPerformanceChart from '../charts/ProcessingPerformanceChart';
 
 import { getDashboardStats, isReady } from '../services/dataService';
-import { formatCurrency, formatPercent, formatDuration, formatNumber } from '../utils/formatters';
+import { formatPercent, formatDuration, formatNumber } from '../utils/formatters';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [dataReady, setDataReady] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const ready = isReady();
@@ -45,8 +46,6 @@ const DashboardPage = () => {
       </div>
     );
   }
-
-  const prefersReducedMotion = useReducedMotion();
 
   const containerVariants = {
     hidden: { opacity: 0 },

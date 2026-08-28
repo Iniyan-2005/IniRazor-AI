@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { generateSyntheticData } from '../utils/syntheticDataGenerator';
 import { reconcileBatch } from '../services/reconciliationEngine';
@@ -24,8 +24,6 @@ import {
 } from '../utils/constants';
 import {
   generateId,
-  formatCurrency,
-  formatNumber,
   formatDuration,
 } from '../utils/formatters';
 import ProgressBar from '../components/ProgressBar';

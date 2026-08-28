@@ -20,30 +20,41 @@ import logo from '../assets/logo.jpg';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 const NAV_ITEMS = [
-  { to: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, end: true },
-  { to: '/transactions',   label: 'Transactions',   icon: ArrowLeftRight },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
   { to: '/reconciliation', label: 'Reconciliation', icon: GitCompareArrows },
-  { to: '/exceptions',     label: 'Exceptions',     icon: AlertTriangle },
-  { to: '/audit',          label: 'Audit Trail',    icon: ScrollText },
-  { to: '/evaluation',     label: 'Evaluation',     icon: BarChart3 },
-  { to: '/settings',       label: 'Settings',       icon: Settings },
+  { to: '/exceptions', label: 'Exceptions', icon: AlertTriangle },
+  { to: '/audit', label: 'Audit Trail', icon: ScrollText },
+  { to: '/evaluation', label: 'Evaluation', icon: BarChart3 },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 /* Page title map — derives the topbar title from the current route */
 const PAGE_TITLES = {
-  '/dashboard':      'Dashboard',
-  '/transactions':   'Transactions',
+  '/dashboard': 'Dashboard',
+  '/transactions': 'Transactions',
   '/reconciliation': 'Reconciliation Engine',
-  '/exceptions':     'Exceptions Queue',
-  '/audit':          'Audit Trail',
-  '/evaluation':     'Evaluation',
-  '/settings':       'System Configuration',
+  '/exceptions': 'Exceptions Queue',
+  '/audit': 'Audit Trail',
+  '/evaluation': 'Evaluation',
+  '/settings': 'System Configuration',
 };
 
 const MainLayout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Handle escape key for logout modal
+  useEffect(() => {
+    if (!showLogoutModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowLogoutModal(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLogoutModal]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -74,7 +85,7 @@ const MainLayout = () => {
       <AppCursorManager />
       {/* ── Mobile Overlay ─────────────────────────────────────────────── */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
@@ -83,9 +94,8 @@ const MainLayout = () => {
 
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out lg:transform-none ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out lg:transform-none ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
         style={{
           backgroundColor: 'var(--sidebar-bg)',
           borderRight: '1px solid var(--sidebar-border)',
@@ -115,7 +125,7 @@ const MainLayout = () => {
             </div>
           </div>
           {/* Close button for mobile */}
-          <button 
+          <button
             className="lg:hidden p-1.5 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close menu"
@@ -183,7 +193,7 @@ const MainLayout = () => {
               </p>
             </div>
             <button
-              onClick={logout}
+              onClick={() => setShowLogoutModal(true)}
               className="p-1.5 rounded-md transition-colors flex-shrink-0"
               style={{ color: 'var(--text-muted)' }}
               onMouseEnter={(e) => {
@@ -213,7 +223,7 @@ const MainLayout = () => {
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <button 
+            <button
               className="lg:hidden p-2 -ml-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
               onClick={toggleMobileMenu}
               aria-label="Open menu"
@@ -271,6 +281,94 @@ const MainLayout = () => {
           </div>
         </main>
       </div>
+
+      {/* ── Logout Confirmation Modal ────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowLogoutModal(false)}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: prefersReducedMotion ? 0 : 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-sm rounded-2xl p-6 shadow-2xl"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="logout-title"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    backgroundColor: 'var(--danger-subtle)',
+                    color: 'var(--danger)',
+                  }}
+                >
+                  <LogOut className="w-6 h-6" />
+                </div>
+                <h3
+                  id="logout-title"
+                  className="text-lg font-bold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Sign out?
+                </h3>
+                <p
+                  className="text-sm mb-6"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Are you sure you want to sign out of your AI Finance Controller session?
+                </p>
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => setShowLogoutModal(false)}
+                    className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-2)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors text-white"
+                    style={{ backgroundColor: 'var(--danger)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'brightness(0.9)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'none';
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
