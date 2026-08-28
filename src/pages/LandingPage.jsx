@@ -5,17 +5,22 @@ import {
   Brain,
   Menu,
   X,
-  ArrowRight,
   TrendingUp,
-  AlertTriangle,
+  ShieldAlert,
   Zap,
+  ArrowRight,
   Database,
+  BarChart,
+  PieChart,
   LineChart,
-  MessageSquare,
-  ShieldAlert
+  Lock,
+  Activity,
+  AlertTriangle,
+  MessageSquare
 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import logo from '../assets/logo.jpg';
+import RupeeCursor from '../components/RupeeCursor.jsx';
 
 // Popup Component
 const WelcomePopup = ({ onClose }) => {
@@ -195,6 +200,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
+      <RupeeCursor />
       {showWelcome && <WelcomePopup onClose={handleCloseWelcome} />}
 
       {/* ── Navbar ────────────────────────────────────────────────────────── */}
