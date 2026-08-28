@@ -225,7 +225,7 @@ const RupeeCursor = () => {
           scale: scaleSymbol,
           opacity: opacitySymbol,
 
-          fontSize: '40px',
+          fontSize: '35px',
           fontWeight: 800,
           lineHeight: 1,
 

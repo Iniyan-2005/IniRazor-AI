@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { CursorProvider } from './contexts/CursorContext'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -31,27 +32,29 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/transactions/:paymentId" element={<TransactionDetailPage />} />
-          <Route path="/reconciliation" element={<ReconciliationPage />} />
-          <Route path="/exceptions" element={<ExceptionsPage />} />
-          <Route path="/audit" element={<AuditTrailPage />} />
-          <Route path="/evaluation" element={<EvaluationPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <CursorProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/transactions/:paymentId" element={<TransactionDetailPage />} />
+            <Route path="/reconciliation" element={<ReconciliationPage />} />
+            <Route path="/exceptions" element={<ExceptionsPage />} />
+            <Route path="/audit" element={<AuditTrailPage />} />
+            <Route path="/evaluation" element={<EvaluationPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </CursorProvider>
     </AuthProvider>
   )
 }

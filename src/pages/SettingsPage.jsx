@@ -3,10 +3,12 @@ import toast from 'react-hot-toast';
 import { getConfig, updateConfig } from '../services/dataService';
 import { getEnvironmentLabel, isSupabaseConfigured } from '../services/supabase';
 import { getAIMode } from '../services/aiService';
-import { Settings, Save, Shield, Database, Brain, CreditCard, CheckCircle2, XCircle, Zap } from 'lucide-react';
+import { Settings, Save, Shield, Database, Brain, CreditCard, CheckCircle2, XCircle, Zap, MousePointer2 } from 'lucide-react';
+import { useCursorContext } from '../contexts/CursorContext.jsx';
 
 const SettingsPage = () => {
   const [config, setConfig] = useState(getConfig());
+  const { preference, updatePreference } = useCursorContext();
 
   const handleSave = () => {
     updateConfig(config);
@@ -148,6 +150,42 @@ const SettingsPage = () => {
             <Save className="w-4 h-4" />
             Save Configuration
           </button>
+        </div>
+      </div>
+
+      {/* Cursor Settings */}
+      <div className="card">
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <MousePointer2 style={{ width: '1.125rem', height: '1.125rem', color: 'var(--text-muted)' }} />
+          <h2 style={cardTitleStyle}>Cursor Experience</h2>
+        </div>
+        <div className="card-body">
+          <p style={hintStyle} className="mb-4">
+            Personalize how you interact with IniRazorAI. The custom ₹ cursor provides a premium fintech experience.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button 
+              onClick={() => updatePreference('rupee')}
+              className={`flex flex-col items-center text-center p-4 rounded-xl border transition-all ${preference === 'rupee' ? 'border-[var(--primary)] bg-[var(--primary-subtle)]' : 'border-[var(--border)] hover:border-[var(--primary)] bg-[var(--bg-surface-2)]'} focus:outline-none focus:ring-2 focus:ring-[var(--primary)]`}
+            >
+              <div className="w-12 h-12 rounded-full border border-[var(--primary)] flex items-center justify-center mb-3 bg-[var(--bg-surface)]">
+                 <span className="font-extrabold text-[var(--text-primary)] text-lg" style={{ textShadow: '0 0 2px var(--bg-surface), -1px -1px 0 var(--bg-surface), 1px -1px 0 var(--bg-surface), -1px 1px 0 var(--bg-surface), 1px 1px 0 var(--bg-surface)' }}>₹</span>
+              </div>
+              <h3 className="font-semibold text-sm text-[var(--text-primary)] mb-1">₹ Rupee Cursor</h3>
+              <p className="text-xs text-[var(--text-muted)]">A custom cursor designed for the IniRazorAI experience.</p>
+            </button>
+
+            <button 
+              onClick={() => updatePreference('default')}
+              className={`flex flex-col items-center text-center p-4 rounded-xl border transition-all ${preference === 'default' ? 'border-[var(--text-primary)] bg-[var(--bg-surface-2)] shadow-sm' : 'border-[var(--border)] hover:border-[var(--text-primary)] bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface)]'} focus:outline-none focus:ring-2 focus:ring-[var(--text-primary)]`}
+            >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                 <MousePointer2 className="w-5 h-5 text-[var(--text-secondary)]" />
+              </div>
+              <h3 className="font-semibold text-sm text-[var(--text-primary)] mb-1">Normal Cursor</h3>
+              <p className="text-xs text-[var(--text-muted)]">Use your device's default cursor.</p>
+            </button>
+          </div>
         </div>
       </div>
 

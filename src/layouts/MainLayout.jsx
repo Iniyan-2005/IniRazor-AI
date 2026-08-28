@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../hooks/useAuth.jsx';
 import EnvironmentBadge from '../components/EnvironmentBadge.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
+import AppCursorManager from '../components/AppCursorManager.jsx';
 import logo from '../assets/logo.jpg';
 
 const NAV_ITEMS = [
@@ -64,6 +65,7 @@ const MainLayout = () => {
       className="flex h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--bg-app)' }}
     >
+      <AppCursorManager />
       {/* ── Mobile Overlay ─────────────────────────────────────────────── */}
       {isMobileMenuOpen && (
         <div 
