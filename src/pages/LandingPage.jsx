@@ -55,7 +55,7 @@ const WelcomePopup = ({ onClose }) => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)] opacity-10 blur-[50px] rounded-full pointer-events-none" />
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase mb-4" style={{ backgroundColor: 'var(--primary-subtle)', color: 'var(--primary-text)' }}>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-4" style={{ backgroundColor: 'var(--primary-subtle)', color: 'var(--primary-text)' }}>
               <Zap className="w-3 h-3" /> Razorpay Buildathon
             </div>
             
@@ -289,40 +289,40 @@ const LandingPage = () => {
                     <div className="absolute inset-0 rounded-full border border-white/30 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
                   </motion.div>
 
-                  <svg className="absolute inset-0 w-full h-full opacity-40">
-                    <path d="M 0,100 C 100,100 150,50 200,50" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_20s_linear_infinite]"} />
-                    <path d="M 0,250 C 100,250 150,150 200,150" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_15s_linear_infinite]"} />
+                  <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 400 400" preserveAspectRatio="none">
+                    <path d="M 0,200 C 150,200 250,100 400,100" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_20s_linear_infinite]"} vectorEffect="non-scaling-stroke" />
+                    <path d="M 0,350 C 150,350 250,250 400,250" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="4 4" className={prefersReducedMotion ? "" : "animate-[dash_15s_linear_infinite]"} vectorEffect="non-scaling-stroke" />
                   </svg>
                   
                   <motion.div 
                     initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}
-                    className={`absolute top-8 right-8 card p-3 shadow-lg flex items-center gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_6s_ease-in-out_infinite]'}`}
+                    className={`absolute top-4 sm:top-8 right-2 sm:right-8 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_6s_ease-in-out_infinite]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--success-subtle)] text-[var(--success)]">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-[var(--text-primary)]">Revenue Trend</p>
-                      <p className="text-xs font-medium text-[var(--success)]">+18.4% this week</p>
+                      <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Revenue Trend</p>
+                      <p className="text-[10px] sm:text-xs font-medium text-[var(--success)]">+18.4% this week</p>
                     </div>
                   </motion.div>
                   
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }}
-                    className={`absolute bottom-12 left-6 card p-3 shadow-lg flex items-center gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_7s_ease-in-out_infinite_reverse]'}`}
+                    className={`absolute bottom-16 sm:bottom-12 left-2 sm:left-6 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_7s_ease-in-out_infinite_reverse]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--warning-subtle)] text-[var(--warning)]">
                       <AlertTriangle className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-[var(--text-primary)]">Anomaly Detected</p>
-                      <p className="text-xs font-medium text-[var(--warning)]">Unusual marketing spend</p>
+                      <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Anomaly Detected</p>
+                      <p className="text-[10px] sm:text-xs font-medium text-[var(--warning)]">Unusual marketing spend</p>
                     </div>
                   </motion.div>
                   
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}
-                    className={`absolute bottom-6 right-10 card p-3 shadow-lg flex items-center gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_8s_ease-in-out_infinite]'}`}
+                    className={`absolute bottom-2 sm:bottom-6 right-2 sm:right-10 card p-2 sm:p-3 shadow-lg flex items-center gap-2 sm:gap-3 bg-[var(--bg-surface)] ${prefersReducedMotion ? '' : 'animate-[float_8s_ease-in-out_infinite]'}`}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--ai-subtle)] text-[var(--ai)]">
                       <Brain className="w-4 h-4" />
@@ -340,7 +340,7 @@ const LandingPage = () => {
       </section>
       
       {/* ── Problem → Solution Storytelling ─────────────────────────────── */}
-      <section className="py-24 bg-[var(--bg-surface-2)]">
+      <section className="py-24 bg-[var(--bg-surface-2)] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div 
@@ -492,9 +492,20 @@ const LandingPage = () => {
                 <p className="mb-8 text-[var(--text-secondary)]">Understand exactly where money comes from and where it goes with real-time categorisation.</p>
               </div>
               <div className="mt-auto flex items-end gap-2 h-24">
-                {[40, 60, 75, 90].map((h, i) => (
-                  <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} transition={{ duration: 0.6, delay: 0.4 + (i * 0.1) }} viewport={{ once: true }} className={`w-1/4 rounded-t-md transition-all ${i===3 ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] group-hover:h-[100%]' : `bg-emerald-500/${20 + i*20} group-hover:h-[${h+5}%]`}`}></motion.div>
-                ))}
+                {[40, 60, 75, 90].map((h, i) => {
+                  const opacities = ['bg-emerald-500/40', 'bg-emerald-500/60', 'bg-emerald-500/80', 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'];
+                  return (
+                    <motion.div 
+                      key={i} 
+                      initial={{ height: 0 }} 
+                      whileInView={{ height: `${h}%` }} 
+                      whileHover={{ height: i === 3 ? '100%' : `${h + 5}%` }}
+                      transition={{ duration: 0.6, delay: 0.4 + (i * 0.1) }} 
+                      viewport={{ once: true }} 
+                      className={`w-1/4 rounded-t-md transition-colors ${opacities[i]}`}
+                    ></motion.div>
+                  );
+                })}
               </div>
             </motion.div>
 
