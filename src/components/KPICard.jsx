@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 
 /**
  * KPICard — A metric card with a colored icon + value.
@@ -38,9 +39,12 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) 
     document.documentElement.classList.contains('dark');
 
   const palette = (isDark ? COLOR_MAP_DARK : COLOR_MAP)[color] ?? COLOR_MAP.blue;
+  const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div
+    <motion.div
+      whileHover={prefersReducedMotion ? {} : { y: -2 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       style={{
         backgroundColor: 'var(--bg-surface)',
         border: `1px solid var(--border)`,
@@ -55,10 +59,10 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) 
         transition: 'box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-card-hover)';
+        if (!prefersReducedMotion) e.currentTarget.style.boxShadow = 'var(--shadow-card-hover)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+        if (!prefersReducedMotion) e.currentTarget.style.boxShadow = 'var(--shadow-card)';
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -135,7 +139,7 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) 
           <Icon style={{ width: '1.25rem', height: '1.25rem' }} />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

@@ -4,7 +4,8 @@ const CursorContext = createContext();
 
 export const CursorProvider = ({ children }) => {
   const [preference, setPreference] = useState(() => {
-    return localStorage.getItem('inirazor_cursor_preference') || null;
+    const val = localStorage.getItem('inirazor_cursor_preference');
+    return (val === 'null' || val === undefined || !val) ? null : val;
   });
 
   const [hasDismissedPopup, setHasDismissedPopup] = useState(() => {

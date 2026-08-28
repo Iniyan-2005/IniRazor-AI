@@ -111,7 +111,9 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const hasSeenWelcome = sessionStorage.getItem('inirazor_welcome_shown');
+  const [welcomeResolved, setWelcomeResolved] = useState(!!hasSeenWelcome);
+  const [showWelcome, setShowWelcome] = useState(!hasSeenWelcome);
   const [activeInsight, setActiveInsight] = useState(0);
   const [isDesktop, setIsDesktop] = useState(true);
   const prefersReducedMotion = useReducedMotion();
@@ -176,19 +178,11 @@ const LandingPage = () => {
   };
 
   // Welcome Popup Logic
-  useEffect(() => {
-    const hasSeenWelcome = sessionStorage.getItem('inirazor_welcome_shown');
-    if (!hasSeenWelcome) {
-      const timer = setTimeout(() => {
-        setShowWelcome(true);
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const handleCloseWelcome = () => {
     setShowWelcome(false);
     sessionStorage.setItem('inirazor_welcome_shown', 'true');
+    setWelcomeResolved(true);
   };
 
   // Handle scroll for sticky navbar
@@ -203,18 +197,21 @@ const LandingPage = () => {
       <RupeeCursor />
       {showWelcome && <WelcomePopup onClose={handleCloseWelcome} />}
 
-      {/* ── Navbar ────────────────────────────────────────────────────────── */}
-      <nav
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'backdrop-blur-md border-b'
-            : 'bg-transparent border-transparent'
-        }`}
-        style={{
-          backgroundColor: isScrolled ? 'color-mix(in srgb, var(--bg-surface) 80%, transparent)' : 'transparent',
-          borderColor: isScrolled ? 'var(--border)' : 'transparent',
-        }}
-      >
+      {/* ── Main Content Container ────────────────────────────────────────────────────────── */}
+      {welcomeResolved && (
+        <>
+          {/* ── Navbar ────────────────────────────────────────────────────────── */}
+          <nav
+            className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+              isScrolled
+                ? 'backdrop-blur-md border-b'
+                : 'bg-transparent border-transparent'
+            }`}
+            style={{
+              backgroundColor: isScrolled ? 'color-mix(in srgb, var(--bg-surface) 80%, transparent)' : 'transparent',
+              borderColor: isScrolled ? 'var(--border)' : 'transparent',
+            }}
+          >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -771,6 +768,8 @@ const LandingPage = () => {
           to { stroke-dashoffset: -100; }
         }
       `}} />
+        </>
+      )}
     </div>
   );
 };

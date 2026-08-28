@@ -10,29 +10,15 @@ const RupeeCursor = () => {
   const cursorY = useMotionValue(-100);
 
   /*
-   * Fast symbol tracking.
-   * This should feel close to the native cursor,
-   * not like a slow floating object.
-   */
-  const symbolSpringConfig = {
-    damping: 35,
-    stiffness: 1200,
-    mass: 0.15,
-  };
-
-  /*
    * Slightly softer ring movement.
    * Gives a premium trailing effect without
    * making the cursor feel delayed.
    */
   const ringSpringConfig = {
     damping: 30,
-    stiffness: 700,
-    mass: 0.3,
+    stiffness: 800,
+    mass: 0.2,
   };
-
-  const smoothX = useSpring(cursorX, symbolSpringConfig);
-  const smoothY = useSpring(cursorY, symbolSpringConfig);
 
   const ringX = useSpring(cursorX, ringSpringConfig);
   const ringY = useSpring(cursorY, ringSpringConfig);
@@ -61,21 +47,14 @@ const RupeeCursor = () => {
     mass: 0.15,
   });
 
+  // Track if cursor has received its first mousemove event
+  const isInitialized = React.useRef(false);
+
   useEffect(() => {
-    /*
-     * Disable custom cursor on touch/coarse pointer devices.
-     */
     if (window.matchMedia('(pointer: coarse)').matches) {
       return;
     }
 
-    /*
-     * If reduced motion is enabled, we keep the ₹ cursor
-     * but remove the noticeable trailing effect by making
-     * the springs effectively immediate.
-     *
-     * The cursor remains usable without unnecessary motion.
-     */
     const styleEl = document.createElement('style');
 
     styleEl.innerHTML = `
@@ -99,6 +78,17 @@ const RupeeCursor = () => {
     let isHovering = false;
 
     const handleMouseMove = (e) => {
+      // Initialize immediately to prevent jump from -100, -100
+      if (!isInitialized.current) {
+        cursorX.set(e.clientX);
+        cursorY.set(e.clientY);
+        ringX.jump(e.clientX);
+        ringY.jump(e.clientY);
+        opacitySymbol.jump(1);
+        opacityRing.jump(0.3);
+        isInitialized.current = true;
+      }
+
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
 
@@ -106,9 +96,6 @@ const RupeeCursor = () => {
         'input, textarea, select, [contenteditable="true"]'
       );
 
-      /*
-       * Restore native cursor behavior for text/input areas.
-       */
       if (isInput) {
         opacitySymbol.set(0);
         opacityRing.set(0);
@@ -126,13 +113,8 @@ const RupeeCursor = () => {
       if (hoveringNow !== isHovering) {
         isHovering = hoveringNow;
 
-        /*
-         * Interactive state:
-         * Small increase only — noticeable but not gimmicky.
-         */
         scaleSymbol.set(hoveringNow ? 1.15 : 1);
         scaleRing.set(hoveringNow ? 1.35 : 1);
-
         opacityRing.set(hoveringNow ? 0.55 : 0.3);
       } else if (!isHovering) {
         opacityRing.set(0.3);
@@ -219,13 +201,13 @@ const RupeeCursor = () => {
           top: -11,
           left: -11,
 
-          x: smoothX,
-          y: smoothY,
+          x: cursorX,
+          y: cursorY,
 
           scale: scaleSymbol,
           opacity: opacitySymbol,
 
-          fontSize: '35px',
+          fontSize: '30px',
           fontWeight: 800,
           lineHeight: 1,
 

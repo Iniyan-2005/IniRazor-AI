@@ -17,6 +17,7 @@ import EnvironmentBadge from '../components/EnvironmentBadge.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import AppCursorManager from '../components/AppCursorManager.jsx';
 import logo from '../assets/logo.jpg';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 const NAV_ITEMS = [
   { to: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, end: true },
@@ -60,8 +61,13 @@ const MainLayout = () => {
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
       className="flex h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--bg-app)' }}
     >
@@ -119,18 +125,32 @@ const MainLayout = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto relative">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
-                `sidebar-link ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`
+                `sidebar-link relative ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`
               }
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span>{label}</span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-active-bg"
+                      className="absolute inset-0 rounded-lg"
+                      style={{ backgroundColor: 'var(--sidebar-link-active-bg)', zIndex: 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35, mass: 0.8 }}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-3 w-full">
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{label}</span>
+                  </div>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -232,15 +252,26 @@ const MainLayout = () => {
 
         {/* Page content */}
         <main
-          className="flex-1 p-4 sm:p-6 overflow-auto"
+          className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto"
           style={{ backgroundColor: 'var(--bg-app)' }}
         >
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
+          <div className="max-w-7xl mx-auto h-full">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="h-full"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
