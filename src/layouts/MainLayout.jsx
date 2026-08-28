@@ -18,7 +18,7 @@ import ThemeToggle from '../components/ThemeToggle.jsx';
 import logo from '../assets/logo.jpg';
 
 const NAV_ITEMS = [
-  { to: '/',               label: 'Dashboard',      icon: LayoutDashboard, end: true },
+  { to: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard, end: true },
   { to: '/transactions',   label: 'Transactions',   icon: ArrowLeftRight },
   { to: '/reconciliation', label: 'Reconciliation', icon: GitCompareArrows },
   { to: '/exceptions',     label: 'Exceptions',     icon: AlertTriangle },
@@ -29,7 +29,7 @@ const NAV_ITEMS = [
 
 /* Page title map — derives the topbar title from the current route */
 const PAGE_TITLES = {
-  '/':               'Dashboard',
+  '/dashboard':      'Dashboard',
   '/transactions':   'Transactions',
   '/reconciliation': 'Reconciliation Engine',
   '/exceptions':     'Exceptions Queue',
@@ -52,7 +52,7 @@ const MainLayout = () => {
     const exact = PAGE_TITLES[location.pathname];
     if (exact) return exact;
     const prefix = Object.keys(PAGE_TITLES).find(
-      (k) => k !== '/' && location.pathname.startsWith(k)
+      (k) => location.pathname.startsWith(k)
     );
     return prefix ? PAGE_TITLES[prefix] : 'IniRazorAI';
   })();
