@@ -53,6 +53,14 @@ const WelcomePopup = ({ onClose }) => {
         >
           {/* Decorative glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)] opacity-10 blur-[50px] rounded-full pointer-events-none" />
+          
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-[var(--bg-surface-2)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-primary)] z-20"
+            aria-label="Close welcome message"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
           <div className="relative z-10">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-4" style={{ backgroundColor: 'var(--primary-subtle)', color: 'var(--primary-text)' }}>
@@ -85,12 +93,6 @@ const WelcomePopup = ({ onClose }) => {
                 className="btn-primary flex-1 py-3 text-sm rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
               >
                 Explore the Experience <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
-              <button 
-                onClick={onClose}
-                className="btn-secondary sm:w-auto px-6 py-3 text-sm rounded-xl font-medium transition-colors"
-              >
-                Maybe Later
               </button>
             </div>
           </div>
