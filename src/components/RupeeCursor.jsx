@@ -58,18 +58,24 @@ const RupeeCursor = () => {
     const styleEl = document.createElement('style');
 
     styleEl.innerHTML = `
-      body,
-      body a,
-      body button,
-      body [role="button"] {
+      body:not(.modal-active),
+      body:not(.modal-active) a,
+      body:not(.modal-active) button,
+      body:not(.modal-active) [role="button"] {
         cursor: none !important;
       }
 
-      body input,
-      body textarea,
-      body select,
-      body [contenteditable="true"] {
+      body:not(.modal-active) input,
+      body:not(.modal-active) textarea,
+      body:not(.modal-active) select,
+      body:not(.modal-active) [contenteditable="true"] {
         cursor: auto !important;
+      }
+      
+      body.modal-active .custom-cursor-element {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
       }
     `;
 
@@ -78,6 +84,12 @@ const RupeeCursor = () => {
     let isHovering = false;
 
     const handleMouseMove = (e) => {
+      if (document.body.classList.contains('modal-active')) {
+        opacitySymbol.set(0);
+        opacityRing.set(0);
+        return;
+      }
+
       // Initialize immediately to prevent jump from -100, -100
       if (!isInitialized.current) {
         cursorX.set(e.clientX);
@@ -176,7 +188,7 @@ const RupeeCursor = () => {
     <>
       {/* Subtle outer interaction ring */}
       <motion.div
-        className="fixed pointer-events-none z-[9999] rounded-full"
+        className="custom-cursor-element fixed pointer-events-none z-[9999] rounded-full"
         style={{
           width: 28,
           height: 28,
@@ -194,7 +206,7 @@ const RupeeCursor = () => {
 
       {/* Indian Rupee cursor */}
       <motion.div
-        className="fixed pointer-events-none z-[10000] flex items-center justify-center select-none"
+        className="custom-cursor-element fixed pointer-events-none z-[10000] flex items-center justify-center select-none"
         style={{
           width: 22,
           height: 22,

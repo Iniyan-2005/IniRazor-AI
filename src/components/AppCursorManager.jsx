@@ -9,14 +9,23 @@ const AppCursorManager = () => {
   
   const showPopup = !preference && !hasDismissedPopup;
 
-  // Handle escape key for popup
+  // Handle escape key and modal-active state for popup
   useEffect(() => {
-    if (!showPopup) return;
+    if (!showPopup) {
+      document.body.classList.remove('modal-active');
+      return;
+    }
+    
+    document.body.classList.add('modal-active');
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') dismissPopup();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('modal-active');
+    };
   }, [showPopup, dismissPopup]);
 
   return (

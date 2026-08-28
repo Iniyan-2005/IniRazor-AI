@@ -46,14 +46,24 @@ const MainLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Handle escape key for logout modal
+  // Handle escape key for logout modal and body class
   useEffect(() => {
-    if (!showLogoutModal) return;
+    if (!showLogoutModal) {
+      document.body.classList.remove('modal-active');
+      return;
+    }
+    
+    document.body.classList.add('modal-active');
+    
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setShowLogoutModal(false);
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('modal-active');
+    };
   }, [showLogoutModal]);
 
   // Close mobile menu on route change
