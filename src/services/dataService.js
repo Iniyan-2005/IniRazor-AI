@@ -9,10 +9,17 @@ let store = {
   evaluationResults: [],
   config: { confidenceThreshold: 0.90, toleranceAmount: 1.00 },
   isDataGenerated: false,
+  activeDataset: null, // 'SYNTHETIC' | 'RAZORPAY'
   lastReconciliationTime: null,
 };
 
 export const getStore = () => store;
+
+export const getActiveDataset = () => store.activeDataset;
+
+export const setActiveDataset = (dataset) => {
+  store.activeDataset = dataset;
+};
 
 export const setPayments = (payments) => {
   store.payments = payments;
@@ -164,6 +171,7 @@ export const clearAll = () => {
     evaluationResults: [],
     config: { confidenceThreshold: 0.90, toleranceAmount: 1.00 },
     isDataGenerated: false,
+    activeDataset: null,
     lastReconciliationTime: null,
   };
 };

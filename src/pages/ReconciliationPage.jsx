@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { generateSyntheticData } from '../utils/syntheticDataGenerator';
 import { reconcileBatch } from '../services/reconciliationEngine';
 import { investigateException, getAIMode } from '../services/aiService';
-import { syncRazorpayData } from '../services/razorpayService';
+import { syncRazorpayData, fetchPersistedPayments } from '../services/razorpayService';
 import { isSupabaseConfigured } from '../services/supabase';
 import {
   getStore,
@@ -14,6 +14,8 @@ import {
   markDataGenerated,
   isReady,
   getDashboardStats,
+  getActiveDataset,
+  setActiveDataset,
 } from '../services/dataService';
 import {
   RECON_STATUS,
@@ -61,6 +63,7 @@ const ReconciliationPage = () => {
 
       setPayments(payments);
       setSettlements(settlements);
+      setActiveDataset('SYNTHETIC');
       markDataGenerated();
 
       addAuditLog({
@@ -247,6 +250,17 @@ const ReconciliationPage = () => {
               <Bot className="w-3.5 h-3.5" />
               {getAIMode()}
             </div>
+            {/* Data Source Indicator */}
+            {getActiveDataset() && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                getActiveDataset() === 'SYNTHETIC' 
+                  ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}>
+                <Database className="w-3.5 h-3.5" />
+                Data: {getActiveDataset() === 'SYNTHETIC' ? 'Synthetic' : 'Razorpay (Live)'}
+              </div>
+            )}
             {/* Razorpay Sync button */}
             {isSupabaseConfigured && (
               <button
@@ -254,15 +268,25 @@ const ReconciliationPage = () => {
                   try {
                     toast.loading('Syncing with Razorpay...', { id: 'rzp-sync' });
                     const result = await syncRazorpayData();
-                    toast.dismiss('rzp-sync');
                     if (result.success) {
-                      toast.success(`${result.message}`);
+                      toast.loading('Loading persisted records from database...', { id: 'rzp-sync' });
+                      const fetchResult = await fetchPersistedPayments();
+                      
+                      if (fetchResult.success) {
+                        setPayments(fetchResult.data);
+                        setSettlements([]); // Purposely clear settlements until Phase 4
+                        setActiveDataset('RAZORPAY');
+                        markDataGenerated();
+                        setDataGenerated(true);
+                        toast.success(`Loaded ${fetchResult.data.length} Razorpay payments!`, { id: 'rzp-sync' });
+                      } else {
+                        toast.error(fetchResult.message || 'Failed to fetch persisted data', { id: 'rzp-sync' });
+                      }
                     } else {
-                      toast.error(result.message || 'Razorpay sync returned no data');
+                      toast.error(result.message || 'Razorpay sync returned no data', { id: 'rzp-sync' });
                     }
                   } catch (err) {
-                    toast.dismiss('rzp-sync');
-                    toast.error('Razorpay sync failed: ' + err.message);
+                    toast.error('Razorpay sync failed: ' + err.message, { id: 'rzp-sync' });
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-colors"

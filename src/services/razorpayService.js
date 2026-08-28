@@ -44,3 +44,33 @@ export const syncRazorpayData = async () => {
 export const isRazorpayAvailable = () => {
   return isSupabaseConfigured;
 };
+
+/**
+ * Fetch persisted payments from the dedicated Edge Function
+ */
+export const fetchPersistedPayments = async () => {
+  if (!isSupabaseConfigured) {
+    return {
+      success: false,
+      message: 'Supabase not configured.',
+      data: null,
+    };
+  }
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/fetch-payments`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch persisted payments: ${response.status}`);
+  }
+
+  return await response.json();
+};
