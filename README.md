@@ -152,11 +152,12 @@ supabase secrets set RAZORPAY_KEY_SECRET=your-secret
 5. Deploy Edge Functions:
 
 ```bash
-supabase functions deploy investigate-exception
-supabase functions deploy reconcile-batch
-supabase functions deploy generate-demo-data
 supabase functions deploy razorpay-sync
-supabase functions deploy evaluate-results
+supabase functions deploy fetch-payments
+supabase functions deploy investigate-exception
+supabase functions deploy persist-reconciliations
+supabase functions deploy persist-audit-logs
+supabase functions deploy fetch-reconciled-data
 ```
 
 ## 🧪 Testing
