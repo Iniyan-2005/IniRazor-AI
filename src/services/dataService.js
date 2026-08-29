@@ -55,6 +55,45 @@ export const setReconciliations = (reconciliations) => {
   store.reconciliations = reconciliations;
 };
 
+export const setAuditLogs = (logs) => {
+  store.auditLogs = logs;
+};
+
+export const fetchPersistedReconciledData = async () => {
+  if (store.dataMode !== 'RAZORPAY') return;
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase credentials not configured');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/fetch-reconciled-data`, {
+      method: 'POST', // or GET if supported by edge function, but we wrote it to accept POST/GET, wait it expects nothing in body.
+      headers: {
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    if (result.success) {
+      setReconciliations(result.reconciliations);
+      setAuditLogs(result.auditLogs);
+    } else {
+      console.error('Failed to fetch reconciled data:', result.message);
+    }
+  } catch (error) {
+    console.error('Error fetching reconciled data:', error);
+  }
+};
+
 export const addAuditLog = (log) => {
   store.auditLogs.push({
     id: log.id || generateId(),

@@ -20,7 +20,8 @@ import {
   setAiProvider,
   persistReconciliationsToDB,
   persistAuditLogsToDB,
-  getDataMode
+  getDataMode,
+  fetchPersistedReconciledData
 } from '../services/dataService';
 import {
   RECON_STATUS,
@@ -329,6 +330,10 @@ const ReconciliationPage = () => {
                         setDataMode('RAZORPAY', 'MANUAL');
                         markDataGenerated();
                         setDataGenerated(true);
+                        
+                        // Phase 8: Hydrate Dashboard state from Supabase
+                        await fetchPersistedReconciledData();
+
                         toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
                       } else {
                         throw new Error(fetchResult.message || 'Failed to fetch persisted data');
