@@ -201,3 +201,30 @@ export const markDataGenerated = () => {
 export const isReady = () => {
   return store.isDataGenerated;
 };
+
+export const persistReconciliationsToDB = async (reconciliations) => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase credentials not configured');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/persist-reconciliations`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ reconciliations }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.message || 'Failed to persist reconciliations');
+  }
+  return result;
+};
