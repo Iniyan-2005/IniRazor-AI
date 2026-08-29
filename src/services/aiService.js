@@ -6,6 +6,7 @@
 
 import { AI_ACTIONS, RECON_STATUS } from '../utils/constants.js';
 import { isSupabaseConfigured, supabase } from './supabase.js';
+import { getAiProvider } from './dataService.js';
 
 /**
  * Validate AI response has correct structure and safe values
@@ -147,6 +148,18 @@ export const investigateException = async (evidence) => {
       // ====== REAL AI MODE ======
       // Call Gemini via Supabase Edge Function
       rawResponse = await callRealAI(evidence);
+      
+      // Check for backend-caught Gemini API failures (quota or general)
+      if (rawResponse.classification === 'AI_UNAVAILABLE') {
+        if (rawResponse.errorType === 'QUOTA_EXHAUSTED') {
+          // Throw specific error to trigger the specific fallback
+          const err = new Error('Gemini API quota exhausted');
+          err.isQuota = true;
+          throw err;
+        } else {
+          throw new Error(rawResponse.explanation || 'Gemini API failed');
+        }
+      }
     } else {
       // ====== DEMO MODE ======
       // Use rule-based mock
@@ -156,14 +169,16 @@ export const investigateException = async (evidence) => {
     return validateAIResponse(rawResponse);
   } catch (error) {
     console.error('AI investigation failed:', error);
-    return {
-      classification: 'AI_UNAVAILABLE',
-      confidence: 0,
-      likelyCause: null,
-      explanation: `AI investigation failed: ${error.message}. Transaction escalated for manual review.`,
-      recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
-      evidence: [],
-    };
+    
+    // Fallback to Demo AI
+    const fallbackResponse = await createMockAIResponse(evidence);
+    const validFallback = validateAIResponse(fallbackResponse);
+    
+    // Override the explanation to clearly state it's fallback
+    validFallback.explanation = `[Demo AI Fallback] ` + validFallback.explanation;
+    validFallback._isFallback = true;
+    validFallback._quotaExhausted = error.isQuota === true;
+    return validFallback;
   }
 };
 
@@ -171,5 +186,6 @@ export const investigateException = async (evidence) => {
  * Get the current AI mode label
  */
 export const getAIMode = () => {
-  return isSupabaseConfigured ? 'Gemini AI (Live)' : 'Mock AI (Demo)';
+  const provider = getAiProvider();
+  return provider === 'GEMINI' ? 'Gemini AI' : 'Demo AI Fallback';
 };

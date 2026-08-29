@@ -100,7 +100,25 @@ RULES:
     )
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`)
+      const errorBody = await response.text();
+      let errorDesc = `Gemini API error: ${response.status}`;
+      let isQuota = response.status === 429;
+      
+      try {
+        const errJson = JSON.parse(errorBody);
+        if (errJson.error && errJson.error.message) {
+          errorDesc = errJson.error.message;
+          const msgLower = errorDesc.toLowerCase();
+          if (msgLower.includes('quota') || msgLower.includes('exhausted') || msgLower.includes('rate limit')) {
+            isQuota = true;
+          }
+        }
+      } catch(e) {}
+
+      if (isQuota) {
+        throw new Error('QUOTA_EXHAUSTED: ' + errorDesc);
+      }
+      throw new Error(errorDesc);
     }
 
     const data = await response.json()
@@ -131,10 +149,13 @@ RULES:
     })
   } catch (error) {
     console.error('AI investigation failed:', error.message)
+    
+    const isQuota = error.message.includes('QUOTA_EXHAUSTED') || error.message.toLowerCase().includes('429');
 
     return new Response(
       JSON.stringify({
         classification: 'AI_UNAVAILABLE',
+        errorType: isQuota ? 'QUOTA_EXHAUSTED' : 'GENERAL_FAILURE',
         confidence: 0,
         likelyCause: null,
         explanation: `AI investigation failed: ${error.message}. Transaction escalated for manual review.`,

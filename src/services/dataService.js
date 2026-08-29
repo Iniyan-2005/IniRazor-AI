@@ -12,6 +12,7 @@ let store = {
   activeDataset: null, // 'SYNTHETIC' | 'RAZORPAY'
   dataMode: null, // 'RAZORPAY' | 'DEMO'
   modeSource: null, // 'MANUAL' | 'AUTO_FALLBACK'
+  aiProvider: 'GEMINI', // 'GEMINI' | 'FALLBACK'
   lastReconciliationTime: null,
 };
 
@@ -30,6 +31,12 @@ export const getModeSource = () => store.modeSource;
 export const setDataMode = (mode, source) => {
   store.dataMode = mode;
   store.modeSource = source;
+};
+
+export const getAiProvider = () => store.aiProvider;
+
+export const setAiProvider = (provider) => {
+  store.aiProvider = provider;
 };
 
 export const setPayments = (payments) => {

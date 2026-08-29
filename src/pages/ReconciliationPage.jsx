@@ -16,7 +16,8 @@ import {
   getDashboardStats,
   getActiveDataset,
   setActiveDataset,
-  setDataMode
+  setDataMode,
+  setAiProvider
 } from '../services/dataService';
 import {
   RECON_STATUS,
@@ -101,6 +102,8 @@ const ReconciliationPage = () => {
       const payments = store.payments;
       const settlements = store.settlements;
       const config = store.config;
+      let hasShownQuotaToast = false;
+      let hasShownFallbackToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
@@ -147,6 +150,23 @@ const ReconciliationPage = () => {
 
           const aiResult = await investigateException(evidence);
           recon.ai_analysis = aiResult;
+
+          if (aiResult._isFallback) {
+            setAiProvider('FALLBACK');
+            if (aiResult._quotaExhausted) {
+              if (!hasShownQuotaToast) {
+                toast.error('Gemini token usage complete — using Demo AI fallback.');
+                hasShownQuotaToast = true;
+              }
+            } else {
+              if (!hasShownFallbackToast) {
+                toast.error('Gemini unavailable — using Demo AI fallback.');
+                hasShownFallbackToast = true;
+              }
+            }
+          } else {
+            setAiProvider('GEMINI');
+          }
 
           if (aiResult.confidence >= (config.confidenceThreshold || DEFAULT_CONFIG.CONFIDENCE_THRESHOLD) 
               && aiResult.recommendedAction === AI_ACTIONS.AUTO_RESOLVE) {
