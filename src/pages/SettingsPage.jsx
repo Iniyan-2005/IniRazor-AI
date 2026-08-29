@@ -152,6 +152,18 @@ const SettingsPage = () => {
               </p>
             </div>
           </div>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => {
+                navigate('/reconciliation');
+                // The actual switch is performed in ReconciliationPage manually, but we can provide a shortcut here later.
+              }}
+              className="btn-secondary" 
+              style={{ fontSize: '0.75rem' }}
+            >
+              Data controls are available in the Reconciliation Engine
+            </button>
+          </div>
         </div>
       </div>
 

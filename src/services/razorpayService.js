@@ -72,5 +72,27 @@ export const fetchPersistedPayments = async () => {
     throw new Error(`Failed to fetch persisted payments: ${response.status}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  
+  if (result.success && result.data) {
+    // Extract nested settlements into a flat array
+    const payments = [];
+    const settlements = [];
+    
+    result.data.forEach(p => {
+      if (p.settlements && Array.isArray(p.settlements)) {
+        settlements.push(...p.settlements);
+      }
+      // Remove the nested settlements array from the payment object
+      const { settlements: _, ...paymentData } = p;
+      payments.push(paymentData);
+    });
+    
+    return {
+      success: true,
+      data: { payments, settlements }
+    };
+  }
+
+  return result;
 };

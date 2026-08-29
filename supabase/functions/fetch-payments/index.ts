@@ -26,22 +26,20 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Fixed, non-arbitrary query with deterministic ordering and bounded limit
-    const { data: payments, error } = await supabase
+    const { data, error } = await supabase
       .from('payments')
-      .select('payment_id, order_id, amount, currency, status, customer_name, payment_method, created_at, metadata')
+      .select('*, settlements(*)')
       .order('created_at', { ascending: false })
       .limit(1000)
 
     if (error) {
-      throw new Error(`Database read error: ${error.message}`)
+      throw new Error(`Select error: ${error.message}`)
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        source: 'RAZORPAY_PERSISTED',
-        count: payments?.length || 0,
-        data: payments || [],
+        data: data || [],
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

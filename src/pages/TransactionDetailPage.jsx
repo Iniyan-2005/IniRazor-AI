@@ -146,12 +146,13 @@ const TransactionDetailPage = () => {
                 <DetailRow label="Settled On">{formatDate(settlement.settled_at)}</DetailRow>
               </dl>
             ) : (
-              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                  No settlement record found for this payment.
+              <div style={{ textAlign: 'center', padding: '2rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'var(--warning)' }}></div>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Settlement Pending
                 </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.25rem' }}>
-                  This payment is missing a settlement.
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Settlement information is currently unavailable.
                 </p>
               </div>
             )}

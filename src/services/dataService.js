@@ -10,6 +10,8 @@ let store = {
   config: { confidenceThreshold: 0.90, toleranceAmount: 1.00 },
   isDataGenerated: false,
   activeDataset: null, // 'SYNTHETIC' | 'RAZORPAY'
+  dataMode: null, // 'RAZORPAY' | 'DEMO'
+  modeSource: null, // 'MANUAL' | 'AUTO_FALLBACK'
   lastReconciliationTime: null,
 };
 
@@ -19,6 +21,15 @@ export const getActiveDataset = () => store.activeDataset;
 
 export const setActiveDataset = (dataset) => {
   store.activeDataset = dataset;
+};
+
+export const getDataMode = () => store.dataMode;
+
+export const getModeSource = () => store.modeSource;
+
+export const setDataMode = (mode, source) => {
+  store.dataMode = mode;
+  store.modeSource = source;
 };
 
 export const setPayments = (payments) => {

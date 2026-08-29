@@ -16,6 +16,7 @@ import {
   getDashboardStats,
   getActiveDataset,
   setActiveDataset,
+  setDataMode
 } from '../services/dataService';
 import {
   RECON_STATUS,
@@ -64,6 +65,7 @@ const ReconciliationPage = () => {
       setPayments(payments);
       setSettlements(settlements);
       setActiveDataset('SYNTHETIC');
+      setDataMode('DEMO', 'MANUAL');
       markDataGenerated();
 
       addAuditLog({
@@ -273,20 +275,30 @@ const ReconciliationPage = () => {
                       const fetchResult = await fetchPersistedPayments();
                       
                       if (fetchResult.success) {
-                        setPayments(fetchResult.data);
-                        setSettlements([]); // Purposely clear settlements until Phase 4
+                        setPayments(fetchResult.data.payments || []);
+                        setSettlements(fetchResult.data.settlements || []);
                         setActiveDataset('RAZORPAY');
+                        setDataMode('RAZORPAY', 'MANUAL');
                         markDataGenerated();
                         setDataGenerated(true);
-                        toast.success(`Loaded ${fetchResult.data.length} Razorpay payments!`, { id: 'rzp-sync' });
+                        toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
                       } else {
-                        toast.error(fetchResult.message || 'Failed to fetch persisted data', { id: 'rzp-sync' });
+                        throw new Error(fetchResult.message || 'Failed to fetch persisted data');
                       }
                     } else {
-                      toast.error(result.message || 'Razorpay sync returned no data', { id: 'rzp-sync' });
+                      throw new Error(result.message || 'Razorpay sync returned no data');
                     }
                   } catch (err) {
-                    toast.error('Razorpay sync failed: ' + err.message, { id: 'rzp-sync' });
+                    console.error("Razorpay failure:", err);
+                    // Automatic Demo Fallback
+                    const { payments, settlements } = generateSyntheticData(500);
+                    setPayments(payments);
+                    setSettlements(settlements);
+                    setActiveDataset('SYNTHETIC');
+                    setDataMode('DEMO', 'AUTO_FALLBACK');
+                    markDataGenerated();
+                    setDataGenerated(true);
+                    toast.error('Razorpay API unavailable — switched to Demo Mode.', { id: 'rzp-sync' });
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-colors"
