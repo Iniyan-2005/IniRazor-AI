@@ -166,7 +166,9 @@ export const investigateException = async (evidence) => {
       rawResponse = await createMockAIResponse(evidence);
     }
 
-    return validateAIResponse(rawResponse);
+    const validResponse = validateAIResponse(rawResponse);
+    validResponse.ai_provider = isSupabaseConfigured ? 'GEMINI' : 'FALLBACK';
+    return validResponse;
   } catch (error) {
     console.error('AI investigation failed:', error);
     
@@ -178,6 +180,7 @@ export const investigateException = async (evidence) => {
     validFallback.explanation = `[Demo AI Fallback] ` + validFallback.explanation;
     validFallback._isFallback = true;
     validFallback._quotaExhausted = error.isQuota === true;
+    validFallback.ai_provider = 'FALLBACK';
     return validFallback;
   }
 };
