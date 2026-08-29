@@ -58,6 +58,7 @@ EVIDENCE:
 - Expected Net Settlement: ₹${evidence.expectedAmount}
 - Actual Net Settlement: ₹${evidence.actualAmount}
 - Difference: ₹${evidence.difference}
+${evidence.isDemoData ? '- Data Context: SYNTHETIC DEMO DATA' : ''}
 
 TASK:
 Analyze this discrepancy and determine:

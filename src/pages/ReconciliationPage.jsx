@@ -104,6 +104,7 @@ const ReconciliationPage = () => {
       const config = store.config;
       let hasShownQuotaToast = false;
       let hasShownFallbackToast = false;
+      let hasShownGeminiSuccessToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
@@ -146,6 +147,7 @@ const ReconciliationPage = () => {
             knownTax: settlement?.tax || 0,
             knownRefund: settlement?.refund || 0,
             knownAdjustment: settlement?.adjustment || 0,
+            isDemoData: getActiveDataset() === 'SYNTHETIC'
           };
 
           const aiResult = await investigateException(evidence);
@@ -166,6 +168,14 @@ const ReconciliationPage = () => {
             }
           } else {
             setAiProvider('GEMINI');
+            if (!hasShownGeminiSuccessToast) {
+              if (getActiveDataset() === 'SYNTHETIC') {
+                toast.success('Gemini AI connected — using live AI analysis on Demo Data.');
+              } else {
+                toast.success('Gemini AI connected — using live AI analysis.');
+              }
+              hasShownGeminiSuccessToast = true;
+            }
           }
 
           if (aiResult.confidence >= (config.confidenceThreshold || DEFAULT_CONFIG.CONFIDENCE_THRESHOLD) 
