@@ -21,6 +21,10 @@ export const getStore = () => store;
 export const getActiveDataset = () => store.activeDataset;
 
 export const setActiveDataset = (dataset) => {
+  if (store.activeDataset !== dataset) {
+    store.auditLogs = [];
+    store.reconciliations = [];
+  }
   store.activeDataset = dataset;
 };
 
@@ -225,6 +229,38 @@ export const persistReconciliationsToDB = async (reconciliations) => {
   const result = await response.json();
   if (!result.success) {
     throw new Error(result.message || 'Failed to persist reconciliations');
+  }
+  return result;
+};
+
+export const persistAuditLogsToDB = async (logs) => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase credentials not configured');
+  }
+
+  // Filter out any logs that belong to Demo mode just in case
+  const logsToPersist = logs.filter(log => store.dataMode === 'RAZORPAY');
+
+  if (logsToPersist.length === 0) return { success: true, count: 0 };
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/persist-audit-logs`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ logs: logsToPersist }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.message || 'Failed to persist audit logs');
   }
   return result;
 };

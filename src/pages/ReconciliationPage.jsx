@@ -19,6 +19,7 @@ import {
   setDataMode,
   setAiProvider,
   persistReconciliationsToDB,
+  persistAuditLogsToDB,
   getDataMode
 } from '../services/dataService';
 import {
@@ -263,12 +264,15 @@ const ReconciliationPage = () => {
       setReconStep('');
       toast.success(`Reconciliation completed. Match rate: ${matchRate}%`);
       
-      // Phase 5: Persist only Razorpay data
+      // Phase 5 & 7: Persist only Razorpay data
       if (getDataMode() === 'RAZORPAY') {
         try {
           toast.loading('Persisting results to database...', { id: 'persist-recon' });
-          await persistReconciliationsToDB(reconResults);
-          toast.success('Reconciliation results saved to database.', { id: 'persist-recon' });
+          await Promise.all([
+            persistReconciliationsToDB(reconResults),
+            persistAuditLogsToDB(store.auditLogs)
+          ]);
+          toast.success('Reconciliation results and audit logs saved to database.', { id: 'persist-recon' });
         } catch (err) {
           toast.error('Failed to save to database: ' + err.message, { id: 'persist-recon' });
         }

@@ -115,10 +115,17 @@ export function statusLabel(status) {
 }
 
 /**
- * Generate a unique ID
+ * Generate a standard UUIDv4
  */
 export function generateId() {
-  return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback UUIDv4 generator
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
 
 /**

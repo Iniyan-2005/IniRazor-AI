@@ -36,7 +36,7 @@ export const reconcilePayment = (payment, settlements, config = DEFAULT_CONFIG) 
   const matchingSettlements = settlements.filter(s => s.payment_id === payment.payment_id);
   
   const baseRecord = {
-    id: generateId('recon_'),
+    id: generateId(),
     payment_id: payment.payment_id,
     expected_amount: payment.amount,
     created_at: new Date().toISOString(),

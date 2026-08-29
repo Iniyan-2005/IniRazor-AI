@@ -2,7 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye, Brain } from 'lucide-react';
-import { getStore, updateReconciliation, addAuditLog } from '../services/dataService';
+import { 
+  getStore, updateReconciliation, addAuditLog, 
+  persistReconciliationsToDB, persistAuditLogsToDB, getDataMode
+} from '../services/dataService';
 import StatusBadge from '../components/StatusBadge';
 import ConfidenceMeter from '../components/ConfidenceMeter';
 import { formatCurrency, generateId } from '../utils/formatters';
@@ -33,7 +36,8 @@ const ExceptionsPage = () => {
       actionType = 'Marked as unresolved';
     }
     updateReconciliation(reconId, { status: newStatus });
-    addAuditLog({
+    
+    const auditLog = {
       id: generateId(),
       reconciliation_id: reconId,
       event_type: eventType,
@@ -44,8 +48,25 @@ const ExceptionsPage = () => {
       decision: newStatus,
       confidence: null,
       created_at: new Date().toISOString(),
-    });
+    };
+    addAuditLog(auditLog);
+
     setRefreshKey((prev) => prev + 1);
+
+    // Phase 7: Persist Human Approval & Audit to DB
+    if (getDataMode() === 'RAZORPAY') {
+      const updatedRecon = getStore().reconciliations.find(r => r.id === reconId);
+      if (updatedRecon) {
+        Promise.all([
+          persistReconciliationsToDB([updatedRecon]),
+          persistAuditLogsToDB([auditLog])
+        ]).catch(err => {
+          console.error("Failed to persist manual resolution to DB:", err);
+          toast.error("Database update failed");
+        });
+      }
+    }
+
     toast.success(toastMsg);
   };
 
