@@ -190,8 +190,13 @@ RULES:
       throw new Error(`Empty response from ${AI_PROVIDER}`)
     }
 
-    // Safely strip markdown block syntax in case the model hallucinates it despite JSON mode
-    text = text.replace(/^```(?:json)?/im, '').replace(/```$/im, '').trim();
+    // Extract the JSON object boundaries to ignore conversational prose (e.g. "Let me analyze...")
+    const startIndex = text.indexOf('{');
+    const endIndex = text.lastIndexOf('}');
+    
+    if (startIndex !== -1 && endIndex !== -1 && endIndex >= startIndex) {
+      text = text.substring(startIndex, endIndex + 1);
+    }
 
     // Parse and validate the AI response
     const aiResult = JSON.parse(text)
