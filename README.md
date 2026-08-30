@@ -26,7 +26,7 @@ graph TD
     B --> C["Supabase PostgreSQL"]
     B --> D["Supabase Edge Functions"]
     D --> E["Reconciliation Engine"]
-    D --> F["AI Agent (Gemini)"]
+    D --> F["AI Agent (NVIDIA NIM)"]
     D --> G["Razorpay API"]
     E --> C
     F --> C
@@ -41,7 +41,7 @@ graph TD
 | Layer | What It Does |
 |-------|-------------|
 | **Deterministic Engine** | ID matching, arithmetic, fee/tax calculations, duplicate detection |
-| **AI Agent (Gemini)** | Investigates ambiguous discrepancies, explains likely causes |
+| **AI Agent (NVIDIA NIM)** | Investigates ambiguous discrepancies, explains likely causes |
 | **Human Review** | Approves/rejects AI recommendations when confidence < 90% |
 | **Audit Trail** | Logs every action with timestamps, actors, and reasoning |
 
@@ -143,8 +143,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 4. Set Edge Function secrets:
 
 ```bash
-supabase secrets set AI_API_KEY=your-gemini-key
-supabase secrets set AI_MODEL=gemini-2.0-flash
+supabase secrets set AI_PROVIDER=NVIDIA
+supabase secrets set AI_API_KEY=your-nvidia-nim-key
+supabase secrets set AI_MODEL=nvidia/nemotron-3-ultra-550b-a55b
+supabase secrets set AI_BASE_URL=https://integrate.api.nvidia.com/v1
 supabase secrets set RAZORPAY_KEY_ID=your-key
 supabase secrets set RAZORPAY_KEY_SECRET=your-secret
 ```

@@ -46,7 +46,7 @@ export const validateAIResponse = (response) => {
 };
 
 /**
- * Call real Gemini AI via Supabase Edge Function
+ * Call real AI via Supabase Edge Function
  */
 const callRealAI = async (evidence) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -57,7 +57,8 @@ const callRealAI = async (evidence) => {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  // INCREASED TIMEOUT: Nemotron-3-Ultra-550b is a massive model and requires a longer time-to-first-token.
+  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
 
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/investigate-exception`, {
@@ -82,7 +83,7 @@ const callRealAI = async (evidence) => {
 };
 
 /**
- * Rule-based mock AI for Demo Mode (no Supabase/Gemini configured)
+ * Rule-based mock AI for Demo Mode (no Supabase/real AI configured)
  */
 export const createMockAIResponse = async (evidence) => {
   // Simulate API delay
@@ -150,26 +151,27 @@ export const createMockAIResponse = async (evidence) => {
 
 /**
  * Main entry point: Investigate an ambiguous exception
- * Uses real Gemini when Supabase is configured, mock otherwise
+ * Uses real AI (NVIDIA NIM or Gemini) when Supabase is configured, mock otherwise
  */
 export const investigateException = async (evidence) => {
   try {
     let rawResponse;
+    const currentProvider = getAiProvider();
 
-    if (isSupabaseConfigured && getAiProvider() === 'GEMINI') {
+    if (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) {
       // ====== REAL AI MODE ======
-      // Call Gemini via Supabase Edge Function
+      // Call AI via Supabase Edge Function
       rawResponse = await callRealAI(evidence);
       
-      // Check for backend-caught Gemini API failures (quota or general)
+      // Check for backend-caught AI API failures (quota or general)
       if (rawResponse.classification === 'AI_UNAVAILABLE') {
         if (rawResponse.errorType === 'QUOTA_EXHAUSTED') {
           // Throw specific error to trigger the specific fallback
-          const err = new Error('Gemini API quota exhausted');
+          const err = new Error(`${currentProvider} API quota exhausted`);
           err.isQuota = true;
           throw err;
         } else {
-          throw new Error(rawResponse.explanation || 'Gemini API failed');
+          throw new Error(rawResponse.explanation || `${currentProvider} API failed`);
         }
       }
     } else {
@@ -179,7 +181,7 @@ export const investigateException = async (evidence) => {
     }
 
     const validResponse = validateAIResponse(rawResponse);
-    validResponse.ai_provider = (isSupabaseConfigured && getAiProvider() === 'GEMINI') ? 'GEMINI' : 'FALLBACK';
+    validResponse.ai_provider = (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) ? currentProvider : 'FALLBACK';
     return validResponse;
   } catch (error) {
     console.error('AI investigation failed:', error);
@@ -203,5 +205,7 @@ export const investigateException = async (evidence) => {
  */
 export const getAIMode = () => {
   const provider = getAiProvider();
-  return provider === 'GEMINI' ? 'Gemini AI' : 'Demo AI Fallback';
+  if (provider === 'NVIDIA') return 'NVIDIA AI';
+  if (provider === 'GEMINI') return 'Gemini AI';
+  return 'Demo AI Fallback';
 };

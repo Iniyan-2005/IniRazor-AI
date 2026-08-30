@@ -3,11 +3,13 @@
 // Supabase Edge Function (Deno/TypeScript)
 // ============================================================
 // This Edge Function receives structured financial evidence
-// and calls Google Gemini to investigate ambiguous discrepancies.
+// and calls NVIDIA NIM or Google Gemini to investigate ambiguous discrepancies.
 //
 // Environment variables required:
-//   AI_API_KEY - Google Gemini API key
-//   AI_MODEL   - Model name (default: gemini-2.0-flash)
+//   AI_PROVIDER - 'NVIDIA' or 'GEMINI' (default: GEMINI)
+//   AI_API_KEY  - API key for the selected provider
+//   AI_MODEL    - Model name
+//   AI_BASE_URL - Base URL for OpenAI-compatible APIs (like NVIDIA NIM)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -41,7 +43,9 @@ serve(async (req) => {
     }
 
     const AI_API_KEY = Deno.env.get('AI_API_KEY')
-    const AI_MODEL = Deno.env.get('AI_MODEL') || 'gemini-2.0-flash'
+    const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'GEMINI'
+    const AI_MODEL = Deno.env.get('AI_MODEL') || (AI_PROVIDER === 'NVIDIA' ? 'nvidia/nemotron-3-ultra-550b-a55b' : 'gemini-2.0-flash')
+    const AI_BASE_URL = Deno.env.get('AI_BASE_URL') || 'https://integrate.api.nvidia.com/v1'
 
     if (!AI_API_KEY) {
       return new Response(
@@ -100,50 +104,94 @@ RULES:
 - Never recommend AUTO_RESOLVE if confidence is below 0.9
 - Be honest about uncertainty`
 
-    // Call Gemini API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${AI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    )
+    let text: string | undefined;
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      let errorDesc = `Gemini API error: ${response.status}`;
-      let isQuota = response.status === 429;
-      
-      try {
-        const errJson = JSON.parse(errorBody);
-        if (errJson.error && errJson.error.message) {
-          errorDesc = errJson.error.message;
+    if (AI_PROVIDER === 'NVIDIA') {
+      const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.1,
+          max_tokens: 1024,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        let errorDesc = `NVIDIA API error: ${response.status}`;
+        let isQuota = response.status === 429;
+        
+        try {
+          const errJson = JSON.parse(errorBody);
+          if (errJson.detail) errorDesc = errJson.detail;
+          if (errJson.title) errorDesc = errJson.title;
           const msgLower = errorDesc.toLowerCase();
           if (msgLower.includes('quota') || msgLower.includes('exhausted') || msgLower.includes('rate limit')) {
             isQuota = true;
           }
-        }
-      } catch(e) {}
+        } catch(e) {}
 
-      if (isQuota) {
-        throw new Error('QUOTA_EXHAUSTED: ' + errorDesc);
+        if (isQuota) throw new Error('QUOTA_EXHAUSTED: ' + errorDesc);
+        throw new Error(errorDesc);
       }
-      throw new Error(errorDesc);
-    }
 
-    const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+      const data = await response.json();
+      text = data.choices?.[0]?.message?.content;
+    } else {
+      // Call Gemini API
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${AI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        let errorDesc = `Gemini API error: ${response.status}`;
+        let isQuota = response.status === 429;
+        
+        try {
+          const errJson = JSON.parse(errorBody);
+          if (errJson.error && errJson.error.message) {
+            errorDesc = errJson.error.message;
+            const msgLower = errorDesc.toLowerCase();
+            if (msgLower.includes('quota') || msgLower.includes('exhausted') || msgLower.includes('rate limit')) {
+              isQuota = true;
+            }
+          }
+        } catch(e) {}
+
+        if (isQuota) {
+          throw new Error('QUOTA_EXHAUSTED: ' + errorDesc);
+        }
+        throw new Error(errorDesc);
+      }
+
+      const data = await response.json()
+      text = data.candidates?.[0]?.content?.parts?.[0]?.text
+    }
 
     if (!text) {
-      throw new Error('Empty response from Gemini')
+      throw new Error(`Empty response from ${AI_PROVIDER}`)
     }
+
+    // Safely strip markdown block syntax in case the model hallucinates it despite JSON mode
+    text = text.replace(/^```(?:json)?/im, '').replace(/```$/im, '').trim();
 
     // Parse and validate the AI response
     const aiResult = JSON.parse(text)

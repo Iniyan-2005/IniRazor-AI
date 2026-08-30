@@ -12,7 +12,7 @@ let store = {
   activeDataset: null, // 'SYNTHETIC' | 'RAZORPAY'
   dataMode: null, // 'RAZORPAY' | 'DEMO'
   modeSource: null, // 'MANUAL' | 'AUTO_FALLBACK'
-  aiProvider: 'GEMINI', // 'GEMINI' | 'FALLBACK'
+  aiProvider: 'NVIDIA', // 'NVIDIA' | 'GEMINI' | 'FALLBACK'
   lastReconciliationTime: null,
 };
 

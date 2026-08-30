@@ -102,9 +102,9 @@ const ReconciliationPage = () => {
     setReconProgress(0);
     const startTime = Date.now();
 
-    // Reset AI provider to try Gemini again for a new run
+    // Reset AI provider to try real AI again for a new run
     if (isSupabaseConfigured) {
-      setAiProvider('GEMINI');
+      setAiProvider('NVIDIA');
     }
 
     try {
@@ -114,7 +114,7 @@ const ReconciliationPage = () => {
       const config = store.config;
       let hasShownQuotaToast = false;
       let hasShownFallbackToast = false;
-      let hasShownGeminiSuccessToast = false;
+      let hasShownAISuccessToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
@@ -167,24 +167,25 @@ const ReconciliationPage = () => {
             setAiProvider('FALLBACK');
             if (aiResult._quotaExhausted) {
               if (!hasShownQuotaToast) {
-                toast.error('Gemini token usage complete — using Demo AI fallback.');
+                toast.error('NVIDIA AI quota/rate limit reached — using Demo AI fallback.');
                 hasShownQuotaToast = true;
               }
             } else {
               if (!hasShownFallbackToast) {
-                toast.error('Gemini unavailable — using Demo AI fallback.');
+                toast.error('NVIDIA AI unavailable — using Demo AI fallback.');
                 hasShownFallbackToast = true;
               }
             }
           } else {
-            setAiProvider('GEMINI');
-            if (!hasShownGeminiSuccessToast) {
+            setAiProvider(aiResult.ai_provider || 'NVIDIA');
+            if (!hasShownAISuccessToast) {
+              const aiName = (aiResult.ai_provider === 'GEMINI') ? 'Gemini AI' : 'NVIDIA AI';
               if (getActiveDataset() === 'SYNTHETIC') {
-                toast.success('Gemini AI connected — using live AI analysis on Demo Data.');
+                toast.success(`${aiName} connected — using live AI analysis on Demo Data.`);
               } else {
-                toast.success('Gemini AI connected — using live AI analysis.');
+                toast.success(`${aiName} connected — using live AI analysis.`);
               }
-              hasShownGeminiSuccessToast = true;
+              hasShownAISuccessToast = true;
             }
           }
 
