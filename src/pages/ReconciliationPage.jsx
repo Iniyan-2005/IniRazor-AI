@@ -33,6 +33,7 @@ import {
 import {
   generateId,
   formatDuration,
+  formatNumber,
 } from '../utils/formatters';
 import ProgressBar from '../components/ProgressBar';
 import StatusBadge from '../components/StatusBadge';
@@ -323,40 +324,50 @@ const ReconciliationPage = () => {
                 onClick={async () => {
                   try {
                     toast.loading('Syncing with Razorpay...', { id: 'rzp-sync' });
-                    const result = await syncRazorpayData();
-                    if (result.success) {
-                      toast.loading('Loading persisted records from database...', { id: 'rzp-sync' });
-                      const fetchResult = await fetchPersistedPayments();
-                      
-                      if (fetchResult.success) {
-                        setPayments(fetchResult.data.payments || []);
-                        setSettlements(fetchResult.data.settlements || []);
-                        setActiveDataset('RAZORPAY');
-                        setDataMode('RAZORPAY', 'MANUAL');
-                        markDataGenerated();
-                        setDataGenerated(true);
-                        
-                        // Phase 8: Hydrate Dashboard state from Supabase
-                        await fetchPersistedReconciledData();
-
-                        toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
-                      } else {
-                        throw new Error(fetchResult.message || 'Failed to fetch persisted data');
+                    
+                    // 1. Razorpay API Sync
+                    let result;
+                    try {
+                      result = await syncRazorpayData();
+                      if (!result.success) {
+                        throw new Error(result.message || 'Razorpay sync returned no data');
                       }
-                    } else {
-                      throw new Error(result.message || 'Razorpay sync returned no data');
+                    } catch (rzpErr) {
+                      console.error("Razorpay API failure:", rzpErr);
+                      // Automatic Demo Fallback
+                      const { payments, settlements } = generateSyntheticData(500);
+                      setPayments(payments);
+                      setSettlements(settlements);
+                      setActiveDataset('SYNTHETIC');
+                      setDataMode('DEMO', 'AUTO_FALLBACK');
+                      markDataGenerated();
+                      setDataGenerated(true);
+                      toast.error('Razorpay API unavailable — switched to Demo Mode.', { id: 'rzp-sync' });
+                      return; // Exit early, do not attempt database fetch
                     }
-                  } catch (err) {
-                    console.error("Razorpay failure:", err);
-                    // Automatic Demo Fallback
-                    const { payments, settlements } = generateSyntheticData(500);
-                    setPayments(payments);
-                    setSettlements(settlements);
-                    setActiveDataset('SYNTHETIC');
-                    setDataMode('DEMO', 'AUTO_FALLBACK');
-                    markDataGenerated();
-                    setDataGenerated(true);
-                    toast.error('Razorpay API unavailable — switched to Demo Mode.', { id: 'rzp-sync' });
+
+                    // 2. Database Fetch (Must NOT trigger Demo Mode fallback)
+                    toast.loading('Loading persisted records from database...', { id: 'rzp-sync' });
+                    const fetchResult = await fetchPersistedPayments();
+                    
+                    if (fetchResult.success) {
+                      setPayments(fetchResult.data.payments || []);
+                      setSettlements(fetchResult.data.settlements || []);
+                      setActiveDataset('RAZORPAY');
+                      setDataMode('RAZORPAY', 'MANUAL');
+                      markDataGenerated();
+                      setDataGenerated(true);
+                      
+                      // Phase 8: Hydrate Dashboard state from Supabase
+                      await fetchPersistedReconciledData();
+
+                      toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
+                    } else {
+                      throw new Error(fetchResult.message || 'Failed to fetch persisted data');
+                    }
+                  } catch (dbErr) {
+                    console.error("Database/Supabase failure:", dbErr);
+                    toast.error('Database error: ' + dbErr.message, { id: 'rzp-sync' });
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-colors"
