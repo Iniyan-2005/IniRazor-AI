@@ -20,12 +20,13 @@ export const syncRazorpayData = async () => {
   }
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
 
   const response = await fetch(`${supabaseUrl}/functions/v1/razorpay-sync`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': `Bearer ${token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({}),
@@ -58,12 +59,13 @@ export const fetchPersistedPayments = async () => {
   }
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
 
   const response = await fetch(`${supabaseUrl}/functions/v1/fetch-payments`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': `Bearer ${token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
     }
   });

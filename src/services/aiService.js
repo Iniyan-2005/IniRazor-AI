@@ -50,23 +50,35 @@ export const validateAIResponse = (response) => {
  */
 const callRealAI = async (evidence) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const response = await fetch(`${supabaseUrl}/functions/v1/investigate-exception`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${supabaseAnonKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ evidence }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
+  if (!supabaseUrl || !token) {
+    throw new Error('Supabase not configured or user not authenticated');
   }
 
-  const result = await response.json();
-  return result;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/investigate-exception`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ evidence }),
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 /**
@@ -144,7 +156,7 @@ export const investigateException = async (evidence) => {
   try {
     let rawResponse;
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && getAiProvider() === 'GEMINI') {
       // ====== REAL AI MODE ======
       // Call Gemini via Supabase Edge Function
       rawResponse = await callRealAI(evidence);
@@ -167,7 +179,7 @@ export const investigateException = async (evidence) => {
     }
 
     const validResponse = validateAIResponse(rawResponse);
-    validResponse.ai_provider = isSupabaseConfigured ? 'GEMINI' : 'FALLBACK';
+    validResponse.ai_provider = (isSupabaseConfigured && getAiProvider() === 'GEMINI') ? 'GEMINI' : 'FALLBACK';
     return validResponse;
   } catch (error) {
     console.error('AI investigation failed:', error);
@@ -177,7 +189,8 @@ export const investigateException = async (evidence) => {
     const validFallback = validateAIResponse(fallbackResponse);
     
     // Override the explanation to clearly state it's fallback
-    validFallback.explanation = `[Demo AI Fallback] ` + validFallback.explanation;
+    const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
+    validFallback.explanation = `[Demo AI Fallback${isTimeout ? ' - Timeout' : ''}] ` + validFallback.explanation;
     validFallback._isFallback = true;
     validFallback._quotaExhausted = error.isQuota === true;
     validFallback.ai_provider = 'FALLBACK';

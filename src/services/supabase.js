@@ -32,3 +32,12 @@ export function getInfrastructureLabel() {
       return 'Not Configured'
   }
 }
+
+/**
+ * Get current session token for authorized Edge Function calls
+ */
+export const getAuthToken = async () => {
+  if (!isSupabaseConfigured) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
+};

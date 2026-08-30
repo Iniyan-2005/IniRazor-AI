@@ -24,6 +24,22 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ classification: 'AI_UNAVAILABLE', confidence: 0, likelyCause: null, explanation: 'Missing authorization header', recommendedAction: 'NEEDS_REVIEW', evidence: [] }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    
+    // Authenticate the token
+    const authClient = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ classification: 'AI_UNAVAILABLE', confidence: 0, likelyCause: null, explanation: 'Unauthorized access', recommendedAction: 'NEEDS_REVIEW', evidence: [] }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     const AI_API_KEY = Deno.env.get('AI_API_KEY')
     const AI_MODEL = Deno.env.get('AI_MODEL') || 'gemini-2.0-flash'
 

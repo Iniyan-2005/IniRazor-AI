@@ -101,6 +101,11 @@ const ReconciliationPage = () => {
     setReconProgress(0);
     const startTime = Date.now();
 
+    // Reset AI provider to try Gemini again for a new run
+    if (isSupabaseConfigured) {
+      setAiProvider('GEMINI');
+    }
+
     try {
       const store = getStore();
       const payments = store.payments;
@@ -396,7 +401,10 @@ const ReconciliationPage = () => {
           )}
           {dataGenerated && !isGenerating && (
             <div className="mt-4 flex items-center text-sm font-medium" style={{ color: 'var(--success)' }}>
-              <CheckCircle2 className="w-4 h-4 mr-1.5" /> 500 records ready
+              <CheckCircle2 className="w-4 h-4 mr-1.5" /> 
+              {getActiveDataset() === 'SYNTHETIC' 
+                ? '500 synthetic records ready' 
+                : `${getStore().payments.length} Razorpay payment${getStore().payments.length === 1 ? '' : 's'} ready`}
             </div>
           )}
         </div>

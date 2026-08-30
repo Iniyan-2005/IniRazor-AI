@@ -1,10 +1,10 @@
 // ============================================================
-// IniRazorAI — Authentication Hook (Demo Mode)
+// IniRazorAI - Authentication Hook (Supabase Auth)
 // ============================================================
-// In Demo Mode: simple local auth with localStorage
-// With Supabase: uses Supabase Auth
+// Uses Supabase Auth if configured, otherwise falls back to local demo auth.
 import { createContext, useContext, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { supabase, isSupabaseConfigured } from '../services/supabase'
 
 const AuthContext = createContext(null)
 
@@ -18,35 +18,60 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing session
-    const stored = localStorage.getItem('inirazor_user')
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored))
-      } catch {
-        localStorage.removeItem('inirazor_user')
+    if (!isSupabaseConfigured) {
+      const stored = localStorage.getItem('inirazor_user')
+      if (stored) {
+        try { setUser(JSON.parse(stored)) } catch { localStorage.removeItem('inirazor_user') }
       }
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    // Supabase Auth
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const login = async (email, password) => {
-    // Demo Mode authentication
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        toast.error('Invalid credentials or user not created in Supabase Auth.')
+        return { success: false, error: error.message }
+      }
+      const demoUser = DEMO_USERS.find(u => u.email === email)
+      toast.success(`Welcome back, ${demoUser ? demoUser.name : 'User'}!`)
+      return { success: true }
+    }
+
+    // Offline Demo Mode authentication fallback
     const demoUser = DEMO_USERS.find(u => u.email === email && u.password === password)
     if (demoUser) {
       const userData = { email: demoUser.email, name: demoUser.name, role: demoUser.role }
       setUser(userData)
       localStorage.setItem('inirazor_user', JSON.stringify(userData))
-      toast.success(`Welcome back, ${demoUser.name}!`)
+      toast.success(`Welcome back, ${demoUser.name}! (Offline Mode)`)
       return { success: true }
     }
     toast.error('Invalid credentials. Use demo credentials to sign in.')
     return { success: false, error: 'Invalid credentials' }
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('inirazor_user')
+  const logout = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut()
+    } else {
+      setUser(null)
+      localStorage.removeItem('inirazor_user')
+    }
     toast.success('Signed out successfully')
   }
 

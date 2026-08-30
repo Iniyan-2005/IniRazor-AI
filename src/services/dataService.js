@@ -63,17 +63,18 @@ export const fetchPersistedReconciledData = async () => {
   if (store.dataMode !== 'RAZORPAY') return;
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials not configured');
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
+  if (!supabaseUrl || !token) {
+    console.warn('Supabase not configured or user not authenticated');
     return;
   }
 
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/fetch-reconciled-data`, {
-      method: 'POST', // or GET if supported by edge function, but we wrote it to accept POST/GET, wait it expects nothing in body.
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
@@ -247,15 +248,16 @@ export const isReady = () => {
 
 export const persistReconciliationsToDB = async (reconciliations) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase credentials not configured');
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
+  if (!supabaseUrl || !token) {
+    throw new Error('Supabase not configured or user not authenticated');
   }
 
   const response = await fetch(`${supabaseUrl}/functions/v1/persist-reconciliations`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ reconciliations }),
@@ -274,9 +276,10 @@ export const persistReconciliationsToDB = async (reconciliations) => {
 
 export const persistAuditLogsToDB = async (logs) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase credentials not configured');
+  const { getAuthToken } = await import('./supabase.js');
+  const token = await getAuthToken();
+  if (!supabaseUrl || !token) {
+    throw new Error('Supabase not configured or user not authenticated');
   }
 
   // Filter out any logs that belong to Demo mode just in case
@@ -287,7 +290,7 @@ export const persistAuditLogsToDB = async (logs) => {
   const response = await fetch(`${supabaseUrl}/functions/v1/persist-audit-logs`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ logs: logsToPersist }),

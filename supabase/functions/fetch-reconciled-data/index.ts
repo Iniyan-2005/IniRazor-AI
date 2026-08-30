@@ -17,8 +17,24 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ success: false, message: 'Missing authorization header' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    const token = authHeader.replace('Bearer ', '')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    // Authenticate the token
+    const authClient = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token)
+    
+    if (authError || !user) {
+      return new Response(JSON.stringify({ success: false, message: 'Unauthorized access' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    // Initialize privileged client for DB operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // 1. Fetch all reconciliations, newest first
