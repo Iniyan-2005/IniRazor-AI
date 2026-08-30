@@ -107,6 +107,13 @@ RULES:
     let text: string | undefined;
 
     if (AI_PROVIDER === 'NVIDIA') {
+      const systemPrompt = `You are a strict JSON-only financial reconciliation API.
+1. Return ONLY valid JSON.
+2. Do not provide reasoning or conversational text.
+3. Do not use Markdown code fences.
+4. Do not place literal newlines/tabs inside JSON string values.
+5. Follow the exact required AI response schema.`;
+
       const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -115,7 +122,10 @@ RULES:
         },
         body: JSON.stringify({
           model: AI_MODEL,
-          messages: [{ role: 'user', content: prompt }],
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
           temperature: 0.1,
           max_tokens: 1024,
           response_format: { type: "json_object" }
