@@ -115,6 +115,8 @@ const ReconciliationPage = () => {
       let hasShownQuotaToast = false;
       let hasShownFallbackToast = false;
       let hasShownAISuccessToast = false;
+      let hasShownMissingSettlementToast = false;
+      let hasShownAINotRequiredToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
@@ -137,6 +139,15 @@ const ReconciliationPage = () => {
 
       let processed = stats.total - stats.needsAI;
       setReconProgress(Math.round((processed / count) * 100));
+
+      // Inform user once per batch if any payments have no settlement data
+      if (stats.missingSettlement > 0 && !hasShownMissingSettlementToast) {
+        toast('Settlement information unavailable — payment requires review.', {
+          icon: '⚠️',
+          duration: 5000,
+        });
+        hasShownMissingSettlementToast = true;
+      }
 
       // Step 2: AI investigation for ambiguous cases
       setReconStep('Investigating exceptions with AI...');
@@ -232,6 +243,15 @@ const ReconciliationPage = () => {
           processed++;
           setReconProgress(Math.round((processed / count) * 100));
         }
+      }
+
+      // Inform user if the entire batch was resolved deterministically (no AI calls needed)
+      if (stats.needsAI === 0 && !hasShownAINotRequiredToast) {
+        toast('NVIDIA AI not required — deterministic reconciliation result.', {
+          icon: 'ℹ️',
+          duration: 5000,
+        });
+        hasShownAINotRequiredToast = true;
       }
 
       // Store results
