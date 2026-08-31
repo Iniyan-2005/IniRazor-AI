@@ -171,7 +171,8 @@ export const getDashboardStats = () => {
   store.reconciliations.forEach(r => {
     if (r.status === RECON_STATUS.MATCHED) matched++;
     else if (r.status === RECON_STATUS.AI_RESOLVED) aiResolved++;
-    else if (r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.AI_UNAVAILABLE) needsReview++;
+    else if (r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.AI_UNAVAILABLE
+          || r.status === RECON_STATUS.MISSING_SETTLEMENT || r.status === RECON_STATUS.DUPLICATE) needsReview++;
     else if (r.status === RECON_STATUS.UNRESOLVED) unresolved++;
 
     // Count by high-level status

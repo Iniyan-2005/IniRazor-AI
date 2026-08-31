@@ -73,6 +73,7 @@ const ExceptionsPage = () => {
   const exceptions = useMemo(
     () => reconciliations.filter(
       (r) => r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.UNRESOLVED
+          || r.status === RECON_STATUS.MISSING_SETTLEMENT || r.status === RECON_STATUS.DUPLICATE
     ),
     [reconciliations, refreshKey]
   );

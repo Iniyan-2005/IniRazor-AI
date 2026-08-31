@@ -160,36 +160,52 @@ export const investigateException = async (evidence) => {
 
     if (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) {
       // ====== REAL AI MODE ======
-      // Call AI via Supabase Edge Function
       rawResponse = await callRealAI(evidence);
-      
+
       // Check for backend-caught AI API failures (quota or general)
       if (rawResponse.classification === 'AI_UNAVAILABLE') {
         if (rawResponse.errorType === 'QUOTA_EXHAUSTED') {
-          // Throw specific error to trigger the specific fallback
+          // Quota: do not retry — throw immediately to Demo AI fallback
           const err = new Error(`${currentProvider} API quota exhausted`);
           err.isQuota = true;
           throw err;
         } else {
-          throw new Error(rawResponse.explanation || `${currentProvider} API failed`);
+          // GENERAL_FAILURE (malformed JSON, prose response, etc.) — attempt ONE retry
+          console.warn(`${currentProvider} returned malformed response. Attempting single retry...`);
+          let retryResponse;
+          try {
+            retryResponse = await callRealAI(evidence);
+          } catch (retryNetErr) {
+            // Retry itself failed at network level — propagate to outer catch
+            throw retryNetErr;
+          }
+
+          if (retryResponse.classification === 'AI_UNAVAILABLE') {
+            // Retry also returned a failure — give up and fall through to Demo AI
+            throw new Error(retryResponse.explanation || `${currentProvider} API failed after retry`);
+          }
+
+          // Retry succeeded — use the recovered response and signal recovery
+          rawResponse = retryResponse;
+          rawResponse._recovered = true;
         }
       }
     } else {
       // ====== DEMO MODE ======
-      // Use rule-based mock
       rawResponse = await createMockAIResponse(evidence);
     }
 
     const validResponse = validateAIResponse(rawResponse);
     validResponse.ai_provider = (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) ? currentProvider : 'FALLBACK';
+    validResponse._recovered = rawResponse._recovered === true;
     return validResponse;
   } catch (error) {
     console.error('AI investigation failed:', error);
-    
+
     // Fallback to Demo AI
     const fallbackResponse = await createMockAIResponse(evidence);
     const validFallback = validateAIResponse(fallbackResponse);
-    
+
     // Override the explanation to clearly state it's fallback
     const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
     validFallback.explanation = `[Demo AI Fallback${isTimeout ? ' - Timeout' : ''}] ` + validFallback.explanation;

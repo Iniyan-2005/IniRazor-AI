@@ -191,7 +191,9 @@ const ReconciliationPage = () => {
             setAiProvider(aiResult.ai_provider || 'NVIDIA');
             if (!hasShownAISuccessToast) {
               const aiName = (aiResult.ai_provider === 'GEMINI') ? 'Gemini AI' : 'NVIDIA AI';
-              if (getActiveDataset() === 'SYNTHETIC') {
+              if (aiResult._recovered) {
+                toast.success(`NVIDIA AI response recovered — using live AI analysis.`);
+              } else if (getActiveDataset() === 'SYNTHETIC') {
                 toast.success(`${aiName} connected — using live AI analysis on Demo Data.`);
               } else {
                 toast.success(`${aiName} connected — using live AI analysis.`);
