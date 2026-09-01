@@ -117,6 +117,9 @@ const ReconciliationPage = () => {
       let hasShownAISuccessToast = false;
       let hasShownMissingSettlementToast = false;
       let hasShownAINotRequiredToast = false;
+      let hasShownUnexplainedToast = false;
+      let hasShownAIUnavailableToast = false;
+      let hasShownTimeoutToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
@@ -142,7 +145,7 @@ const ReconciliationPage = () => {
 
       // Inform user once per batch if any payments have no settlement data
       if (stats.missingSettlement > 0 && !hasShownMissingSettlementToast) {
-        toast('Settlement information unavailable — payment requires review.', {
+        toast('Missing settlement records found — manual review required.', {
           icon: '⚠️',
           duration: 5000,
         });
@@ -189,7 +192,20 @@ const ReconciliationPage = () => {
             }
           } else {
             setAiProvider(aiResult.ai_provider || 'NVIDIA');
-            if (!hasShownAISuccessToast) {
+            
+            // Check for explicit AI failures or classifications that should generate a toast
+            if (aiResult.classification === 'AI_UNAVAILABLE') {
+              if (aiResult.errorType === 'TIMEOUT' && !hasShownTimeoutToast) {
+                toast.error('AI investigation timed out — payment requires manual review.');
+                hasShownTimeoutToast = true;
+              } else if (aiResult.errorType !== 'TIMEOUT' && !hasShownAIUnavailableToast) {
+                toast.error('AI investigation unavailable — payment requires manual review.');
+                hasShownAIUnavailableToast = true;
+              }
+            } else if (aiResult.classification === 'UNEXPLAINED_DISCREPANCY' && !hasShownUnexplainedToast) {
+              toast('AI identified an unexplained discrepancy — payment requires review.', { icon: '⚠️' });
+              hasShownUnexplainedToast = true;
+            } else if (!hasShownAISuccessToast) {
               const aiName = (aiResult.ai_provider === 'GEMINI') ? 'NVIDIA AI' : (aiResult.ai_provider === 'NVIDIA' ? 'NVIDIA AI' : 'AI');
               if (aiResult._recovered) {
                 toast.success(`NVIDIA AI response recovered — using live AI analysis.`);

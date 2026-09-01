@@ -163,7 +163,7 @@ function SignInView({ onGoSignUp, onGoForgot }) {
           {loading ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
           ) : (
-            'Sign In'
+            isSupabaseConfigured ? 'Sign in with Email' : 'Sign In'
           )}
         </button>
       </form>
@@ -246,30 +246,32 @@ function SignInView({ onGoSignUp, onGoForgot }) {
       </p>
 
       {/* Demo credentials */}
-      <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
-        <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.625rem' }}>
-          Demo credentials
-        </p>
-        <div className="space-y-1.5">
-          {[
-            { label: 'Finance Admin', email: 'admin@inirazor.ai', password: 'admin123' },
-            { label: 'Finance Reviewer', email: 'reviewer@inirazor.ai', password: 'review123' },
-          ].map((cred) => (
-            <button
-              key={cred.email}
-              type="button"
-              onClick={() => { setEmail(cred.email); setPassword(cred.password); }}
-              className="w-full text-left rounded-lg transition-colors"
-              style={{ padding: '0.625rem 0.75rem', backgroundColor: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'; }}
-            >
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{cred.label}</p>
-              <p style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{cred.email}</p>
-            </button>
-          ))}
+      {!isSupabaseConfigured && (
+        <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
+          <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.625rem' }}>
+            Demo Access
+          </p>
+          <div className="space-y-1.5">
+            {[
+              { label: 'Finance Admin', email: 'admin@inirazor.ai', password: 'admin123' },
+              { label: 'Finance Reviewer', email: 'reviewer@inirazor.ai', password: 'review123' },
+            ].map((cred) => (
+              <button
+                key={cred.email}
+                type="button"
+                onClick={() => { setEmail(cred.email); setPassword(cred.password); }}
+                className="w-full text-left rounded-lg transition-colors"
+                style={{ padding: '0.625rem 0.75rem', backgroundColor: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'; }}
+              >
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{cred.label}</p>
+                <p style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{cred.email}</p>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -58,7 +58,7 @@ const callRealAI = async (evidence) => {
 
   const controller = new AbortController();
   // INCREASED TIMEOUT: Nemotron-3-Ultra-550b is a massive model and requires a longer time-to-first-token.
-  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/investigate-exception`, {
@@ -179,7 +179,7 @@ export const investigateException = async (evidence) => {
           const is410 = explanation.includes('410');
           
           if (is401 || is403 || is404 || is410) {
-            throw new Error(explanation || `${currentProvider} API failed`);
+            return validateAIResponse(rawResponse);
           }
 
           const is503 = explanation.includes('503');
@@ -200,13 +200,13 @@ export const investigateException = async (evidence) => {
           }
 
           if (retryResponse.classification === 'AI_UNAVAILABLE') {
-            // Retry also returned a failure — give up and fall through to Demo AI
-            throw new Error(retryResponse.explanation || `${currentProvider} API failed after retry`);
+            // Retry also returned a failure — give up and gracefully return AI_UNAVAILABLE
+            rawResponse = retryResponse;
+          } else {
+            // Retry succeeded — use the recovered response and signal recovery
+            rawResponse = retryResponse;
+            rawResponse._recovered = true;
           }
-
-          // Retry succeeded — use the recovered response and signal recovery
-          rawResponse = retryResponse;
-          rawResponse._recovered = true;
         }
       }
     } else {
@@ -221,12 +221,30 @@ export const investigateException = async (evidence) => {
   } catch (error) {
     console.error('AI investigation failed:', error);
 
+    const isTimeout = error.name === 'AbortError' || error?.message?.toLowerCase().includes('timeout');
+
+    // If we are in Real AI mode, do not silently convert upstream failures (timeouts/network) into Fallback.
+    if (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI') && !error.isQuota) {
+      return {
+        classification: 'AI_UNAVAILABLE',
+        confidence: 0,
+        recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
+        errorType: isTimeout ? 'TIMEOUT' : 'GENERAL_FAILURE',
+        explanation: isTimeout 
+          ? 'AI investigation timed out after 60 seconds.' 
+          : `AI investigation failed: ${error.message || 'Unknown network error'}.`,
+        likelyCause: null,
+        evidence: evidence ? Object.keys(evidence) : [],
+        ai_provider: currentProvider,
+        _recovered: false
+      };
+    }
+
     // Fallback to Demo AI
     const fallbackResponse = await createMockAIResponse(evidence);
     const validFallback = validateAIResponse(fallbackResponse);
 
     // Override the explanation to clearly state it's fallback
-    const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
     validFallback.explanation = `[Demo AI Fallback${isTimeout ? ' - Timeout' : ''}] ` + validFallback.explanation;
     validFallback._isFallback = true;
     validFallback._quotaExhausted = error.isQuota === true;

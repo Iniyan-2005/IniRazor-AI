@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { getConfig, updateConfig, getActiveDataset } from '../services/dataService';
 import { getInfrastructureLabel, isSupabaseConfigured } from '../services/supabase';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { getAIMode } from '../services/aiService';
 import { Settings, Save, Shield, Database, Brain, CreditCard, CheckCircle2, XCircle, Zap, MousePointer2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import { useCursorContext } from '../contexts/CursorContext.jsx';
 const SettingsPage = () => {
   const [config, setConfig] = useState(getConfig());
   const { preference, updatePreference } = useCursorContext();
+  const { userProfile } = useAuth();
 
   const handleSave = () => {
     updateConfig(config);
@@ -22,7 +24,7 @@ const SettingsPage = () => {
       icon: Database,
       connected: isSupabaseConfigured,
       status: isSupabaseConfigured ? 'Connected' : 'Not Configured',
-      detail: isSupabaseConfigured ? import.meta.env.VITE_SUPABASE_URL : 'Add VITE_SUPABASE_URL to .env',
+      detail: isSupabaseConfigured ? 'Managed backend' : 'Backend not configured',
     },
     {
       name: 'AI Provider (NVIDIA)',
@@ -306,38 +308,101 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      {/* Demo Credentials */}
+      {/* Account / Demo Credentials */}
       <div className="card">
         <div className="card-header">
-          <h2 style={cardTitleStyle}>Demo Credentials</h2>
+          <h2 style={cardTitleStyle}>
+            {isSupabaseConfigured ? 'Authenticated Account' : 'Demo Credentials'}
+          </h2>
         </div>
         <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { role: 'Finance Admin', email: 'admin@inirazor.ai', pass: 'admin123', desc: 'Full access: reconciliation, approvals, settings' },
-              { role: 'Finance Reviewer', email: 'reviewer@inirazor.ai', pass: 'review123', desc: 'View transactions, review exceptions' },
-            ].map((cred) => (
-              <div
-                key={cred.role}
-                style={{
-                  padding: '1rem',
-                  backgroundColor: 'var(--bg-surface-2)',
-                  borderRadius: '0.625rem',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                  {cred.role}
+          {isSupabaseConfigured && userProfile ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                padding: '1rem',
+                backgroundColor: 'var(--bg-surface-2)',
+                borderRadius: '0.625rem',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              {userProfile.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  alt="Avatar"
+                  style={{ width: '3rem', height: '3rem', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '3rem',
+                    height: '3rem',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--primary-subtle)',
+                    color: 'var(--primary-text)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {(userProfile.name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {userProfile.name}
                 </p>
-                <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
-                  {cred.email} / {cred.pass}
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  {userProfile.email}
                 </p>
-                <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  {cred.desc}
-                </p>
+                <div
+                  style={{
+                    marginTop: '0.375rem',
+                    display: 'inline-block',
+                    padding: '0.125rem 0.5rem',
+                    backgroundColor: 'var(--bg-surface-3)',
+                    borderRadius: '1rem',
+                    fontSize: '0.6875rem',
+                    color: 'var(--text-muted)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  {userProfile.providerLabel}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { role: 'Finance Admin', email: 'admin@inirazor.ai', pass: 'admin123', desc: 'Full access: reconciliation, approvals, settings' },
+                { role: 'Finance Reviewer', email: 'reviewer@inirazor.ai', pass: 'review123', desc: 'View transactions, review exceptions' },
+              ].map((cred) => (
+                <div
+                  key={cred.role}
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: 'var(--bg-surface-2)',
+                    borderRadius: '0.625rem',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                    {cred.role}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+                    {cred.email} / {cred.pass}
+                  </p>
+                  <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    {cred.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

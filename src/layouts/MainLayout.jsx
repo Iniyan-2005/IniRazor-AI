@@ -41,7 +41,7 @@ const PAGE_TITLES = {
 };
 
 const MainLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -181,26 +181,39 @@ const MainLayout = () => {
           style={{ borderTop: '1px solid var(--sidebar-border)' }}
         >
           <div className="flex items-center gap-3 px-1">
-            {/* Avatar initial */}
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 uppercase"
-              style={{
-                backgroundColor: 'var(--primary-subtle)',
-                color: 'var(--primary-text)',
-              }}
-            >
-              {(user?.name || user?.email || 'U').charAt(0)}
-            </div>
+            {/* Avatar initial or image */}
+            {userProfile?.avatar ? (
+              <img
+                src={userProfile.avatar}
+                alt="Avatar"
+                className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+              />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 uppercase"
+                style={{
+                  backgroundColor: 'var(--primary-subtle)',
+                  color: 'var(--primary-text)',
+                }}
+              >
+                {(userProfile?.name || 'U').charAt(0)}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p
                 className="text-sm font-medium truncate leading-tight"
                 style={{ color: 'var(--text-primary)' }}
               >
-                {user?.name || 'User'}
+                {userProfile?.name}
               </p>
-              <p className="text-[11px] truncate leading-tight" style={{ color: 'var(--text-muted)' }}>
-                {user?.email || ''}
+              <p className="text-[11px] truncate leading-tight mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                {userProfile?.email}
               </p>
+              {userProfile?.providerLabel && (
+                <p className="text-[10px] truncate leading-tight mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  {userProfile.providerLabel}
+                </p>
+              )}
             </div>
             <button
               onClick={() => setShowLogoutModal(true)}

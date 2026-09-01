@@ -62,8 +62,8 @@ export function AuthProvider({ children }) {
         toast.error('Invalid credentials or user not created in Supabase Auth.')
         return { success: false, error: error.message }
       }
-      const demoUser = DEMO_USERS.find(u => u.email === email)
-      toast.success(`Welcome back, ${demoUser ? demoUser.name : 'User'}!`)
+      const name = data?.user?.user_metadata?.full_name || data?.user?.user_metadata?.name || email.split('@')[0] || 'User'
+      toast.success(`Welcome back, ${name}!`)
       return { success: true }
     }
 
@@ -144,8 +144,40 @@ export function AuthProvider({ children }) {
     toast.success('Signed out successfully')
   }
 
+  // ─── Standardized User Profile Derivation ───
+  const userProfile = (() => {
+    if (!user) return null
+
+    if (!isSupabaseConfigured) {
+      return {
+        name: user.name || 'Demo User',
+        email: user.email,
+        avatar: null,
+        providerLabel: 'Demo Access',
+        isDemo: true,
+      }
+    }
+
+    const provider = user.app_metadata?.provider
+    let providerLabel = 'Signed in with Supabase'
+    if (provider === 'google') providerLabel = 'Signed in with Google'
+    else if (provider === 'email') providerLabel = 'Signed in with Email'
+    else if (provider) providerLabel = `Signed in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}`
+
+    let name = user.user_metadata?.full_name || user.user_metadata?.name || user.name
+    if (!name) name = user.email ? user.email.split('@')[0] : 'User'
+
+    return {
+      name,
+      email: user.email,
+      avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+      providerLabel,
+      isDemo: false,
+    }
+  })()
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup, sendPasswordReset, updatePassword, signInWithGoogle, isSupabaseConfigured }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, login, logout, signup, sendPasswordReset, updatePassword, signInWithGoogle, isSupabaseConfigured }}>
       {children}
     </AuthContext.Provider>
   )
