@@ -27,18 +27,33 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Supabase Auth
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Supabase Auth — use onAuthStateChange as the single source of truth.
+    // This fires immediately with the current session (INITIAL_SESSION event) AND
+    // fires again when the OAuth token lands in the URL hash (SIGNED_IN event).
+    // Setting loading = false only here (not in getSession) ensures ProtectedRoute
+    // never redirects away before the OAuth callback tokens have been processed.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
       setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
+      if (event === 'SIGNED_IN' && session?.user) {
+        const name = session.user.user_metadata?.full_name || session.user.email || 'User'
+        // Only show welcome toast for OAuth sign-ins (email login shows its own toast)
+        if (session.user.app_metadata?.provider === 'google') {
+          toast.success(`Welcome, ${name}!`)
+        }
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // ─── Helper: build the OAuth redirect URL from the current browser origin ───
+  // Always derives from window.location.origin — never hardcoded.
+  // Strips any trailing slash from origin before appending the path.
+  const getOAuthRedirectUrl = () => {
+    const origin = window.location.origin.replace(/\/$/, '')
+    return `${origin}/dashboard`
+  }
 
   const login = async (email, password) => {
     if (isSupabaseConfigured) {
@@ -72,13 +87,13 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: getOAuthRedirectUrl(),
       },
     })
     if (error) {
       return { success: false, error: error.message }
     }
-    // Browser will redirect to Google — no further action needed here
+    // Browser navigates away to Google — no further action needed here
     return { success: true }
   }
 
