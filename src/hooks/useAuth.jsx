@@ -65,6 +65,23 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'Invalid credentials' }
   }
 
+  const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Google Sign-In requires Supabase to be configured.' }
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    })
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    // Browser will redirect to Google — no further action needed here
+    return { success: true }
+  }
+
   const signup = async (email, password) => {
     if (!isSupabaseConfigured) {
       return { success: false, error: 'Sign up requires Supabase to be configured.' }
@@ -113,7 +130,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup, sendPasswordReset, updatePassword, isSupabaseConfigured }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, signup, sendPasswordReset, updatePassword, signInWithGoogle, isSupabaseConfigured }}>
       {children}
     </AuthContext.Provider>
   )

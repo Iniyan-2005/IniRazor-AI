@@ -84,7 +84,8 @@ function SignInView({ onGoSignUp, onGoForgot }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login, signInWithGoogle, isSupabaseConfigured } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -166,6 +167,71 @@ function SignInView({ onGoSignUp, onGoForgot }) {
           )}
         </button>
       </form>
+
+      {/* ── Google Sign-In ─────────────────────────────────────────── */}
+      {isSupabaseConfigured && (
+        <>
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.25rem 0' }}>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>or</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+          </div>
+
+          {/* Google button */}
+          <button
+            type="button"
+            disabled={googleLoading || loading}
+            onClick={async () => {
+              setGoogleLoading(true);
+              try {
+                const result = await signInWithGoogle();
+                if (!result.success) {
+                  toast.error(result.error || 'Google Sign-In failed. Please try again.');
+                }
+                // On success the browser navigates away — no further action needed
+              } catch {
+                toast.error('Google Sign-In failed. Please try again.');
+              } finally {
+                setGoogleLoading(false);
+              }
+            }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.625rem',
+              padding: '0.625rem 1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid var(--border-strong)',
+              backgroundColor: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: googleLoading || loading ? 'not-allowed' : 'pointer',
+              opacity: googleLoading || loading ? 0.6 : 1,
+              transition: 'background-color 150ms ease, border-color 150ms ease',
+            }}
+            onMouseEnter={(e) => { if (!googleLoading && !loading) e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface)'; }}
+            aria-label="Continue with Google"
+          >
+            {googleLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--text-muted)' }} />
+            ) : (
+              /* Google SVG logo — inline, no external dependency */
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
+              </svg>
+            )}
+            {googleLoading ? 'Redirecting to Google…' : 'Continue with Google'}
+          </button>
+        </>
+      )}
 
       {/* Switch to Sign Up */}
       <p style={{ fontSize: '0.8125rem', textAlign: 'center', color: 'var(--text-muted)', marginTop: '1.25rem' }}>
