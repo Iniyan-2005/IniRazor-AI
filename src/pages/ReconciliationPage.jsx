@@ -64,7 +64,7 @@ const ReconciliationPage = () => {
         setGenProgress((prev) => Math.min(prev + 10, 90));
       }, 150);
 
-      const { payments, settlements } = generateSyntheticData(500);
+      const { payments, settlements } = generateSyntheticData(100);
       clearInterval(progressInterval);
       setGenProgress(100);
 
@@ -79,8 +79,8 @@ const ReconciliationPage = () => {
         reconciliation_id: null,
         event_type: EVENT_TYPES.DATA_GENERATED,
         actor: ACTORS.SYSTEM,
-        action: 'Generated 500 synthetic payment and settlement records',
-        input_snapshot: { count: 500 },
+        action: 'Generated 100 synthetic payment and settlement records',
+        input_snapshot: { count: 100 },
         reasoning: 'Synthetic data generated for reconciliation testing',
         decision: 'DATA_READY',
         confidence: 1.0,
@@ -88,7 +88,7 @@ const ReconciliationPage = () => {
       });
 
       setDataGenerated(true);
-      toast.success('500 synthetic records generated successfully');
+      toast.success('100 synthetic records generated successfully');
     } catch (error) {
       console.error(error);
       toast.error('Failed to generate data: ' + error.message);
@@ -358,7 +358,7 @@ const ReconciliationPage = () => {
                     } catch (rzpErr) {
                       console.error("Razorpay API failure:", rzpErr);
                       // Automatic Demo Fallback
-                      const { payments, settlements } = generateSyntheticData(500);
+                      const { payments, settlements } = generateSyntheticData(100);
                       setPayments(payments);
                       setSettlements(settlements);
                       setActiveDataset('SYNTHETIC');
@@ -414,7 +414,11 @@ const ReconciliationPage = () => {
             </div>
             <div>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>1. Generate Data</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>500 synthetic records</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {getActiveDataset() === 'SYNTHETIC' && dataGenerated 
+                  ? `${getStore().payments.length} synthetic records` 
+                  : '100 synthetic records'}
+              </p>
             </div>
           </div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>
@@ -426,7 +430,7 @@ const ReconciliationPage = () => {
             className="btn-primary w-full justify-center"
           >
             {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span>{isGenerating ? 'Generating...' : dataGenerated ? 'Regenerate Data' : 'Generate 500 Records'}</span>
+            <span>{isGenerating ? 'Generating...' : dataGenerated ? 'Regenerate Data' : 'Generate 100 Records'}</span>
           </button>
           {isGenerating && (
             <div className="mt-4">
@@ -437,7 +441,7 @@ const ReconciliationPage = () => {
             <div className="mt-4 flex items-center text-sm font-medium" style={{ color: 'var(--success)' }}>
               <CheckCircle2 className="w-4 h-4 mr-1.5" /> 
               {getActiveDataset() === 'SYNTHETIC' 
-                ? '500 synthetic records ready' 
+                ? `${getStore().payments.length} synthetic record${getStore().payments.length === 1 ? '' : 's'} ready` 
                 : `${getStore().payments.length} Razorpay payment${getStore().payments.length === 1 ? '' : 's'} ready`}
             </div>
           )}

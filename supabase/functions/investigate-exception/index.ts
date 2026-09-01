@@ -44,7 +44,7 @@ serve(async (req) => {
 
     const AI_API_KEY = Deno.env.get('AI_API_KEY')
     const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'GEMINI'
-    const AI_MODEL = Deno.env.get('AI_MODEL') || (AI_PROVIDER === 'NVIDIA' ? 'nvidia/nemotron-3-ultra-550b-a55b' : 'gemini-2.0-flash')
+    const AI_MODEL = (Deno.env.get('AI_MODEL') || (AI_PROVIDER === 'NVIDIA' ? 'nvidia/nemotron-3-ultra-550b-a55b' : 'gemini-2.0-flash')).trim()
     const AI_BASE_URL = Deno.env.get('AI_BASE_URL') || 'https://integrate.api.nvidia.com/v1'
 
     if (!AI_API_KEY) {
@@ -127,8 +127,12 @@ RULES:
             { role: 'user', content: prompt }
           ],
           temperature: 0.1,
+          top_p: 0.95,
           max_tokens: 1024,
-          response_format: { type: "json_object" }
+          response_format: { type: "json_object" },
+          chat_template_kwargs: {
+            enable_thinking: false
+          }
         })
       });
 

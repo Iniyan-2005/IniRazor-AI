@@ -170,8 +170,27 @@ export const investigateException = async (evidence) => {
           err.isQuota = true;
           throw err;
         } else {
-          // GENERAL_FAILURE (malformed JSON, prose response, etc.) — attempt ONE retry
-          console.warn(`${currentProvider} returned malformed response. Attempting single retry...`);
+          const explanation = rawResponse.explanation || '';
+          
+          // DO NOT retry client errors or permanently unavailable endpoints
+          const is401 = explanation.includes('401');
+          const is403 = explanation.includes('403');
+          const is404 = explanation.includes('404');
+          const is410 = explanation.includes('410');
+          
+          if (is401 || is403 || is404 || is410) {
+            throw new Error(explanation || `${currentProvider} API failed`);
+          }
+
+          const is503 = explanation.includes('503');
+
+          if (is503) {
+            console.warn(`${currentProvider} returned 503. Waiting 1000ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else {
+            console.warn(`${currentProvider} returned malformed response. Attempting single retry...`);
+          }
+
           let retryResponse;
           try {
             retryResponse = await callRealAI(evidence);

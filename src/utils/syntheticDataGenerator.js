@@ -28,7 +28,7 @@ const createRandom = (seed) => {
   };
 };
 
-export const generateSyntheticData = (count = 500) => {
+export const generateSyntheticData = (count = 100) => {
   const payments = [];
   const settlements = [];
   const groundTruth = [];
