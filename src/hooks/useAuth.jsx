@@ -65,6 +65,43 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'Invalid credentials' }
   }
 
+  const signup = async (email, password) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Sign up requires Supabase to be configured.' }
+    }
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    // If session is immediately created, user is logged in (email confirmation disabled)
+    // If not, user needs to confirm email first
+    const needsConfirmation = !data.session
+    return { success: true, needsConfirmation }
+  }
+
+  const sendPasswordReset = async (email) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Password reset requires Supabase to be configured.' }
+    }
+    const redirectTo = `${window.location.origin}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  }
+
+  const updatePassword = async (newPassword) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Password update requires Supabase to be configured.' }
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) {
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  }
+
   const logout = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut()
@@ -76,7 +113,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, signup, sendPasswordReset, updatePassword, isSupabaseConfigured }}>
       {children}
     </AuthContext.Provider>
   )

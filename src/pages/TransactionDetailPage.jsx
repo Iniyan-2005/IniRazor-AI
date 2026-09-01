@@ -254,8 +254,10 @@ const TransactionDetailPage = () => {
               <BrainCircuit style={{ width: '1.125rem', height: '1.125rem', color: 'var(--ai)' }} />
               <h2 style={{ ...sectionTitle, color: 'var(--ai-text)' }}>
                 AI Investigation Report
-                {isSupabaseConfigured && (
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 400, color: 'var(--ai)', marginLeft: '0.5rem' }}>(Gemini)</span>
+                {isSupabaseConfigured && recon?.ai_analysis?.ai_provider && (
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 400, color: 'var(--ai)', marginLeft: '0.5rem' }}>
+                    ({recon.ai_analysis.ai_provider === 'FALLBACK' ? 'Demo AI' : recon.ai_analysis.ai_provider === 'NVIDIA' ? 'NVIDIA NIM' : recon.ai_analysis.ai_provider})
+                  </span>
                 )}
               </h2>
             </div>

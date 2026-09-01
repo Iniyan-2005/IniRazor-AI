@@ -190,7 +190,7 @@ const ReconciliationPage = () => {
           } else {
             setAiProvider(aiResult.ai_provider || 'NVIDIA');
             if (!hasShownAISuccessToast) {
-              const aiName = (aiResult.ai_provider === 'GEMINI') ? 'Gemini AI' : 'NVIDIA AI';
+              const aiName = (aiResult.ai_provider === 'GEMINI') ? 'NVIDIA AI' : (aiResult.ai_provider === 'NVIDIA' ? 'NVIDIA AI' : 'AI');
               if (aiResult._recovered) {
                 toast.success(`NVIDIA AI response recovered — using live AI analysis.`);
               } else if (getActiveDataset() === 'SYNTHETIC') {

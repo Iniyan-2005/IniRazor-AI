@@ -25,11 +25,11 @@ const SettingsPage = () => {
       detail: isSupabaseConfigured ? import.meta.env.VITE_SUPABASE_URL : 'Add VITE_SUPABASE_URL to .env',
     },
     {
-      name: 'AI Provider (Gemini)',
+      name: 'AI Provider (NVIDIA)',
       icon: Brain,
       connected: isSupabaseConfigured,
       status: isSupabaseConfigured ? 'Connected' : 'Not Configured',
-      detail: isSupabaseConfigured ? 'Edge Function → Gemini API' : 'Using rule-based mock responses',
+      detail: isSupabaseConfigured ? 'Edge Function → NVIDIA NIM (Nemotron)' : 'Using rule-based mock responses',
     },
     {
       name: 'Razorpay',
@@ -46,7 +46,7 @@ const SettingsPage = () => {
   let datasetDetail = 'Go to Reconciliation to load data.';
   if (dataset === 'SYNTHETIC') {
     datasetLabel = 'Synthetic Demo Data';
-    datasetDetail = 'Using generated 500 records.';
+    datasetDetail = 'Using generated 100 records.';
   } else if (dataset === 'RAZORPAY') {
     datasetLabel = 'Razorpay Test Data';
     datasetDetail = 'Live records synced from Razorpay Test API.';
@@ -105,7 +105,7 @@ const SettingsPage = () => {
           </p>
           <p style={{ fontSize: '0.875rem', color: isSupabaseConfigured ? 'var(--primary-text)' : 'var(--warning-text)', opacity: 0.8, marginTop: '0.125rem' }}>
             {isSupabaseConfigured
-              ? 'Connected to Supabase + Gemini AI + Razorpay Test Mode'
+              ? 'Connected to Supabase + NVIDIA AI (Nemotron) + Razorpay Test Mode'
               : 'Integrations not configured. Core engine will work offline.'}
           </p>
         </div>

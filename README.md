@@ -59,19 +59,19 @@ The AI **never** modifies financial data, creates records, or initiates transact
 
 ## 📊 Dataset
 
-- **500 synthetic records** with realistic Indian payment data
+- **100 synthetic records** with realistic Indian payment data
 - Ground truth stored for evaluation (never sent to AI)
 
 | Category | % | Count |
 |----------|---|-------|
-| Normal matches | 70% | 350 |
-| Fee/Tax differences | 10% | 50 |
-| Refund differences | 5% | 25 |
-| Adjustment differences | 5% | 25 |
-| Missing settlements | 4% | 20 |
-| Duplicates | 3% | 15 |
-| Unexplained mismatches | 2% | 10 |
-| Invalid data | 1% | 5 |
+| Normal matches | 70% | 70 |
+| Fee/Tax differences | 10% | 10 |
+| Refund differences | 5% | 5 |
+| Adjustment differences | 5% | 5 |
+| Missing settlements | 4% | 4 |
+| Duplicates | 3% | 3 |
+| Unexplained mismatches | 2% | 2 |
+| Invalid data | 1% | 1 |
 
 ## 📈 Metrics
 
@@ -95,7 +95,7 @@ All metrics are calculated dynamically from real reconciliation results:
 
 | Mode | Status |
 |------|--------|
-| **Demo Mode** | Full 500-record dataset, no credentials needed |
+| **Demo Mode** | Full 100-record dataset, no credentials needed |
 | **Razorpay Test Mode** | Fetches test payments via Razorpay API |
 
 The app is fully functional in Demo Mode without any external credentials.

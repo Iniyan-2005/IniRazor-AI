@@ -1,7 +1,7 @@
 // ============================================================
 // IniRazorAI — AI Service
-// Uses real Gemini via Supabase Edge Function when configured,
-// falls back to rule-based mock in Demo Mode.
+// Uses real NVIDIA NIM via Supabase Edge Function when configured,
+// falls back to rule-based Demo AI in Demo Mode.
 // ============================================================
 
 import { AI_ACTIONS, RECON_STATUS } from '../utils/constants.js';

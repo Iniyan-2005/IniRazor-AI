@@ -74,7 +74,7 @@ export const DEFAULT_CONFIG = {
   CONFIDENCE_THRESHOLD: 0.90,
   TOLERANCE_AMOUNT: 1.00, // ₹1 tolerance for rounding
   BATCH_SIZE: 50,
-  TOTAL_RECORDS: 500,
+  TOTAL_RECORDS: 100,
 }
 
 // Status colors for UI
