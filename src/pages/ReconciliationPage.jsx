@@ -115,7 +115,6 @@ const ReconciliationPage = () => {
       let hasShownQuotaToast = false;
       let hasShownFallbackToast = false;
       let hasShownAISuccessToast = false;
-      let hasShownMissingSettlementToast = false;
       let hasShownAINotRequiredToast = false;
       let hasShownUnexplainedToast = false;
       let hasShownAIUnavailableToast = false;
@@ -143,20 +142,17 @@ const ReconciliationPage = () => {
       let processed = stats.total - stats.needsAI;
       setReconProgress(Math.round((processed / count) * 100));
 
-      // Inform user once per batch if any payments have no settlement data
-      if (stats.missingSettlement > 0 && !hasShownMissingSettlementToast) {
-        toast('Missing settlement records found — manual review required.', {
-          icon: '⚠️',
-          duration: 5000,
-        });
-        hasShownMissingSettlementToast = true;
-      }
-
       // Step 2: AI investigation for ambiguous cases
       setReconStep('Investigating exceptions with AI...');
-      for (let i = 0; i < reconResults.length; i++) {
-        const recon = reconResults[i];
-        if (recon.status === RECON_STATUS.AMOUNT_MISMATCH && !recon._isDeterministic) {
+      // Controlled concurrency for NVIDIA reliability; avoids overwhelming the upstream AI provider.
+      const CONCURRENCY_LIMIT = 3;
+      const aiTasks = reconResults.filter(recon => recon.status === RECON_STATUS.AMOUNT_MISMATCH && !recon._isDeterministic);
+      let currentIndex = 0;
+
+      const runWorker = async () => {
+        while (currentIndex < aiTasks.length) {
+          const recon = aiTasks[currentIndex++];
+          
           const payment = payments.find((p) => p.payment_id === recon.payment_id);
           const settlement = settlements.find((s) => s.payment_id === recon.payment_id);
           
@@ -261,7 +257,13 @@ const ReconciliationPage = () => {
           processed++;
           setReconProgress(Math.round((processed / count) * 100));
         }
+      };
+
+      const workers = [];
+      for (let i = 0; i < CONCURRENCY_LIMIT; i++) {
+        workers.push(runWorker());
       }
+      await Promise.all(workers);
 
       // Inform user if the entire batch was resolved deterministically (no AI calls needed)
       if (stats.needsAI === 0 && !hasShownAINotRequiredToast) {
@@ -310,6 +312,13 @@ const ReconciliationPage = () => {
       setReconStep('');
       toast.success(`Reconciliation completed. Match rate: ${matchRate}%`);
       
+      if (stats.missingSettlement > 0) {
+        toast(`Missing settlement records: ${stats.missingSettlement} — manual review required.`, {
+          icon: '⚠️',
+          duration: 6000,
+        });
+      }
+
       // Phase 5 & 7: Persist only Razorpay data
       if (getDataMode() === 'RAZORPAY') {
         try {
@@ -551,7 +560,7 @@ const ReconciliationPage = () => {
                 </div>
               ))}
               <div className="pt-3 space-y-2">
-                <button onClick={() => navigate('/')} className="btn-primary w-full justify-center text-sm">
+                <button onClick={() => navigate('/dashboard')} className="btn-primary w-full justify-center text-sm">
                   <BarChart3 className="w-4 h-4" /> View Dashboard
                 </button>
                 <button onClick={() => navigate('/exceptions')} className="btn-warning w-full justify-center text-sm">

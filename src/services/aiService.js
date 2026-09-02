@@ -154,9 +154,12 @@ export const createMockAIResponse = async (evidence) => {
  * Uses real AI (NVIDIA NIM or Gemini) when Supabase is configured, mock otherwise
  */
 export const investigateException = async (evidence) => {
+  // Declared outside try so it is accessible in the catch block.
+  // (const declared inside try {} is not in scope inside catch {}.)
+  const currentProvider = getAiProvider();
+
   try {
     let rawResponse;
-    const currentProvider = getAiProvider();
 
     if (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) {
       // ====== REAL AI MODE ======
