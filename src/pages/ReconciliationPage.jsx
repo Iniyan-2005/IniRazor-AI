@@ -41,6 +41,9 @@ import KPICard from '../components/KPICard';
 import { Play, Database, RefreshCw, CheckCircle2, AlertTriangle, Brain, Loader2, Zap, BarChart3, CreditCard, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+// ────────────────────────────────────────────────────────────────────────
+
+
 const ReconciliationPage = () => {
   const navigate = useNavigate();
   const [dataGenerated, setDataGenerated] = useState(isReady());
@@ -53,6 +56,7 @@ const ReconciliationPage = () => {
   const [reconStep, setReconStep] = useState('');
   
   const [results, setResults] = useState(null);
+
 
   const handleGenerateData = async () => {
     setIsGenerating(true);
@@ -97,10 +101,24 @@ const ReconciliationPage = () => {
     }
   };
 
+  const runGuardRef = React.useRef(false);
+
   const handleRunReconciliation = async () => {
+    const reconciliationRunId = crypto.randomUUID();
+    console.log('[RECON] Started', { reconciliationRunId, timestamp: Date.now() });
+
+    if (runGuardRef.current) {
+      console.warn('[RECON] Duplicate invocation blocked by useRef run-guard', { reconciliationRunId });
+      // We return here to prevent actual duplicate execution as defensive hardening,
+      // but the log proves whether multiple invocations were actually happening.
+      return;
+    }
+    runGuardRef.current = true;
+
     setIsReconciling(true);
     setReconProgress(0);
     const startTime = Date.now();
+    console.log('[RECON_TIMELINE]', { runId: reconciliationRunId, phase: 'RUN_STARTED', timestamp: startTime, elapsedMs: 0 });
 
     // Reset AI provider to try real AI again for a new run
     if (isSupabaseConfigured) {
@@ -118,14 +136,18 @@ const ReconciliationPage = () => {
       let hasShownAINotRequiredToast = false;
       let hasShownUnexplainedToast = false;
       let hasShownAIUnavailableToast = false;
+
       let hasShownTimeoutToast = false;
       const count = payments.length;
       setTotalRecords(count);
 
-      // Step 1: Deterministic reconciliation
+      console.log('[RECON_TIMELINE]', { runId: reconciliationRunId, phase: 'DETERMINISTIC_PHASE_STARTED', elapsedMs: Date.now() - startTime });
+      // Step 1: Deterministic reconciliation (Fully synchronous block)
       setReconStep('Running deterministic matching...');
       const { reconciliations: reconResults, stats } = reconcileBatch(payments, settlements, config);
       
+      console.log('[RECON_TIMELINE]', { runId: reconciliationRunId, phase: 'DETERMINISTIC_PHASE_COMPLETED', totalProcessed: stats.total, matchedCount: stats.matched, needsAiCount: stats.needsAI, elapsedMs: Date.now() - startTime });
+
       addAuditLog({
         id: generateId(),
         reconciliation_id: null,
@@ -144,20 +166,42 @@ const ReconciliationPage = () => {
 
       // Step 2: AI investigation for ambiguous cases
       setReconStep('Investigating exceptions with AI...');
-      // Controlled concurrency for NVIDIA reliability; avoids overwhelming the upstream AI provider.
-      const CONCURRENCY_LIMIT = 3;
-      const aiTasks = reconResults.filter(recon => recon.status === RECON_STATUS.AMOUNT_MISMATCH && !recon._isDeterministic);
-      let currentIndex = 0;
+      
+      // Kept at 2 as an independent hardening measure for NVIDIA stability, 
+      // but returning to the 'currentIndex' architecture to verify the cancellation cause.
+      const CONCURRENCY_LIMIT = 2; 
 
-      const runWorker = async () => {
+      const aiTasks = reconResults.filter(
+        (recon) =>
+          recon.status === RECON_STATUS.AMOUNT_MISMATCH && !recon._isDeterministic
+      );
+      
+      console.log('[RECON_TIMELINE]', { runId: reconciliationRunId, phase: 'AI_TASKS_CREATED', initialProgressCounter: processed, totalAiTasks: aiTasks.length, elapsedMs: Date.now() - startTime });
+
+      // Reverting to the shared index architecture to instrument it and see if 
+      // index races or unawaited promises actually occur during runtime.
+      let currentIndex = 0;
+      let taskSeq = 0; 
+
+
+      const runWorker = async (workerId) => {
         while (currentIndex < aiTasks.length) {
           const recon = aiTasks[currentIndex++];
           
+          if (!recon) {
+            console.log(`[WORKER ${workerId}] No task found at incremented index`, { reconciliationRunId });
+            break;
+          }
+
+          const requestId = `recon-${reconciliationRunId.slice(0,4)}-${++taskSeq}`;
+          console.log(`[WORKER ${workerId}] Investigation task started`, { requestId, paymentId: recon.payment_id });
+
           const payment = payments.find((p) => p.payment_id === recon.payment_id);
           const settlement = settlements.find((s) => s.payment_id === recon.payment_id);
-          
+
           // Build structured evidence for AI
           const evidence = {
+            requestId,
             payment,
             settlement,
             expectedAmount: recon.expected_amount,
@@ -167,10 +211,31 @@ const ReconciliationPage = () => {
             knownTax: settlement?.tax || 0,
             knownRefund: settlement?.refund || 0,
             knownAdjustment: settlement?.adjustment || 0,
-            isDemoData: getActiveDataset() === 'SYNTHETIC'
+            isDemoData: getActiveDataset() === 'SYNTHETIC',
           };
 
-          const aiResult = await investigateException(evidence);
+          let aiResult;
+          try {
+            aiResult = await investigateException(evidence);
+            console.log(`[WORKER ${workerId}] Investigation completed normally`, { requestId });
+          } catch (workerErr) {
+            console.error(`[WORKER ${workerId}] Investigation threw unexpectedly`, { requestId, error: workerErr?.message });
+            
+            aiResult = {
+              classification: 'AI_UNAVAILABLE',
+              confidence: 0,
+              recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
+              errorType: 'GENERAL_FAILURE',
+              explanation: `AI investigation error: ${
+                workerErr instanceof Error ? workerErr.message : String(workerErr)
+              }`,
+              likelyCause: null,
+              evidence: [],
+              ai_provider: getStore().aiProvider,
+              _recovered: false,
+            };
+          }
+
           recon.ai_analysis = aiResult;
 
           if (aiResult._isFallback) {
@@ -188,8 +253,7 @@ const ReconciliationPage = () => {
             }
           } else {
             setAiProvider(aiResult.ai_provider || 'NVIDIA');
-            
-            // Check for explicit AI failures or classifications that should generate a toast
+
             if (aiResult.classification === 'AI_UNAVAILABLE') {
               if (aiResult.errorType === 'TIMEOUT' && !hasShownTimeoutToast) {
                 toast.error('AI investigation timed out — payment requires manual review.');
@@ -198,11 +262,21 @@ const ReconciliationPage = () => {
                 toast.error('AI investigation unavailable — payment requires manual review.');
                 hasShownAIUnavailableToast = true;
               }
-            } else if (aiResult.classification === 'UNEXPLAINED_DISCREPANCY' && !hasShownUnexplainedToast) {
-              toast('AI identified an unexplained discrepancy — payment requires review.', { icon: '⚠️' });
+            } else if (
+              aiResult.classification === 'UNEXPLAINED_DISCREPANCY' &&
+              !hasShownUnexplainedToast
+            ) {
+              toast('AI identified an unexplained discrepancy — payment requires review.', {
+                icon: '⚠️',
+              });
               hasShownUnexplainedToast = true;
             } else if (!hasShownAISuccessToast) {
-              const aiName = (aiResult.ai_provider === 'GEMINI') ? 'NVIDIA AI' : (aiResult.ai_provider === 'NVIDIA' ? 'NVIDIA AI' : 'AI');
+              const aiName =
+                aiResult.ai_provider === 'GEMINI'
+                  ? 'NVIDIA AI'
+                  : aiResult.ai_provider === 'NVIDIA'
+                  ? 'NVIDIA AI'
+                  : 'AI';
               if (aiResult._recovered) {
                 toast.success(`NVIDIA AI response recovered — using live AI analysis.`);
               } else if (getActiveDataset() === 'SYNTHETIC') {
@@ -214,8 +288,11 @@ const ReconciliationPage = () => {
             }
           }
 
-          if (aiResult.confidence >= (config.confidenceThreshold || DEFAULT_CONFIG.CONFIDENCE_THRESHOLD) 
-              && aiResult.recommendedAction === AI_ACTIONS.AUTO_RESOLVE) {
+          if (
+            aiResult.confidence >=
+              (config.confidenceThreshold || DEFAULT_CONFIG.CONFIDENCE_THRESHOLD) &&
+            aiResult.recommendedAction === AI_ACTIONS.AUTO_RESOLVE
+          ) {
             recon.status = RECON_STATUS.AI_RESOLVED;
             recon.confidence = aiResult.confidence;
             recon.reason = aiResult.explanation;
@@ -261,9 +338,11 @@ const ReconciliationPage = () => {
 
       const workers = [];
       for (let i = 0; i < CONCURRENCY_LIMIT; i++) {
-        workers.push(runWorker());
+        workers.push(runWorker(i));
       }
       await Promise.all(workers);
+
+
 
       // Inform user if the entire batch was resolved deterministically (no AI calls needed)
       if (stats.needsAI === 0 && !hasShownAINotRequiredToast) {
@@ -337,8 +416,10 @@ const ReconciliationPage = () => {
       console.error(error);
       toast.error('Reconciliation failed: ' + error.message);
     } finally {
+      runGuardRef.current = false;
       setIsReconciling(false);
     }
+
   };
 
   return (

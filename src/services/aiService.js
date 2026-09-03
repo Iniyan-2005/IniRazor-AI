@@ -49,6 +49,9 @@ export const validateAIResponse = (response) => {
  * Call real AI via Supabase Edge Function
  */
 const callRealAI = async (evidence) => {
+  const requestId = evidence?.requestId || 'unknown-req';
+  console.log('[AI REQUEST] Start', { requestId });
+
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const { getAuthToken } = await import('./supabase.js');
   const token = await getAuthToken();
@@ -57,8 +60,13 @@ const callRealAI = async (evidence) => {
   }
 
   const controller = new AbortController();
-  // INCREASED TIMEOUT: Nemotron-3-Ultra-550b is a massive model and requires a longer time-to-first-token.
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+  const startedAt = Date.now();
+  
+  console.log('[AI REQUEST] Timeout scheduled', { requestId, timeoutMs: 150000 });
+  const timeoutId = setTimeout(() => {
+    console.log('[AI REQUEST] Timeout fired - aborting controller', { requestId, elapsedMs: Date.now() - startedAt });
+    controller.abort();
+  }, 150000); 
 
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/investigate-exception`, {
@@ -71,14 +79,28 @@ const callRealAI = async (evidence) => {
       signal: controller.signal
     });
 
+    console.log('[AI REQUEST] fetch resolved', { requestId, status: response.status, elapsedMs: Date.now() - startedAt });
+
     if (!response.ok) {
       throw new Error(`Edge Function error: ${response.status} ${response.statusText}`);
     }
 
     const result = await response.json();
     return result;
+  } catch (error) {
+    console.error('[AI REQUEST] failed', {
+      requestId,
+      name: error?.name,
+      message: error?.message,
+      elapsedMs: Date.now() - startedAt
+    });
+    throw error;
   } finally {
     clearTimeout(timeoutId);
+    console.log('[AI REQUEST] finished finally block', {
+      requestId,
+      elapsedMs: Date.now() - startedAt
+    });
   }
 };
 
@@ -163,59 +185,26 @@ export const investigateException = async (evidence) => {
 
     if (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) {
       // ====== REAL AI MODE ======
+      // Single call — the Edge Function already handles NVIDIA 503 retries internally
+      // (MAX_NVIDIA_ATTEMPTS = 3, with 2 s and 4 s back-off). Do NOT retry here.
       rawResponse = await callRealAI(evidence);
 
-      // Check for backend-caught AI API failures (quota or general)
-      if (rawResponse.classification === 'AI_UNAVAILABLE') {
-        if (rawResponse.errorType === 'QUOTA_EXHAUSTED') {
-          // Quota: do not retry — throw immediately to Demo AI fallback
-          const err = new Error(`${currentProvider} API quota exhausted`);
-          err.isQuota = true;
-          throw err;
-        } else {
-          const explanation = rawResponse.explanation || '';
-          
-          // DO NOT retry client errors or permanently unavailable endpoints
-          const is401 = explanation.includes('401');
-          const is403 = explanation.includes('403');
-          const is404 = explanation.includes('404');
-          const is410 = explanation.includes('410');
-          
-          if (is401 || is403 || is404 || is410) {
-            return validateAIResponse(rawResponse);
-          }
-
-          const is503 = explanation.includes('503');
-
-          if (is503) {
-            console.warn(`${currentProvider} returned 503. Waiting 1000ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          } else {
-            console.warn(`${currentProvider} returned malformed response. Attempting single retry...`);
-          }
-
-          let retryResponse;
-          try {
-            retryResponse = await callRealAI(evidence);
-          } catch (retryNetErr) {
-            // Retry itself failed at network level — propagate to outer catch
-            throw retryNetErr;
-          }
-
-          if (retryResponse.classification === 'AI_UNAVAILABLE') {
-            // Retry also returned a failure — give up and gracefully return AI_UNAVAILABLE
-            rawResponse = retryResponse;
-          } else {
-            // Retry succeeded — use the recovered response and signal recovery
-            rawResponse = retryResponse;
-            rawResponse._recovered = true;
-          }
-        }
+      // Quota exhausted: throw so the outer catch produces a Demo AI fallback.
+      if (rawResponse.classification === 'AI_UNAVAILABLE' &&
+          rawResponse.errorType === 'QUOTA_EXHAUSTED') {
+        const err = new Error(`${currentProvider} API quota exhausted`);
+        err.isQuota = true;
+        throw err;
       }
+
+      // All other AI_UNAVAILABLE results (503 exhausted, timeout, general failure)
+      // are returned directly. The worker in ReconciliationPage will mark the
+      // exception as NEEDS_REVIEW. No frontend retry.
     } else {
       // ====== DEMO MODE ======
       rawResponse = await createMockAIResponse(evidence);
     }
+
 
     const validResponse = validateAIResponse(rawResponse);
     validResponse.ai_provider = (isSupabaseConfigured && (currentProvider === 'NVIDIA' || currentProvider === 'GEMINI')) ? currentProvider : 'FALLBACK';

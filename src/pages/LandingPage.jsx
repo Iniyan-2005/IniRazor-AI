@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Brain, ArrowRight, ShieldCheck, Zap, Database, TrendingUp, AlertTriangle, Play, Menu, X, CheckCircle2, ChevronRight, LineChart, MessageSquare, ShieldAlert } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import logo from '../assets/logo.jpg';
+import welcomeBg from '../assets/welcome-bg.png';
 import RupeeCursor from '../components/RupeeCursor.jsx';
 
 // Popup Component
@@ -32,9 +33,12 @@ const WelcomePopup = ({ onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${welcomeBg})` }}
           onClick={onClose}
-        />
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        </motion.div>
 
         {/* Modal */}
         <motion.div
