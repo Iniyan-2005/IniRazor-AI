@@ -18,8 +18,7 @@ export const validateAIResponse = (response) => {
       confidence: 0,
       recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
       explanation: 'Invalid AI response format received.',
-      likelyCause: 'SYSTEM_ERROR',
-      evidence: [],
+      likelyCause: 'SYSTEM_ERROR'
     };
   }
   
@@ -121,8 +120,7 @@ export const createMockAIResponse = async (evidence) => {
       confidence: 0.95,
       likelyCause: 'Mismatched fee configuration between payment gateway and ledger.',
       explanation: `The difference of ₹${Math.abs(difference).toFixed(2)} closely matches the expected fee of ₹${knownFees}. Likely a failure in fee deduction logging.`,
-      recommendedAction: AI_ACTIONS.AUTO_RESOLVE,
-      evidence: ['FEE_MATCH'],
+      recommendedAction: AI_ACTIONS.AUTO_RESOLVE
     };
   }
   
@@ -132,8 +130,7 @@ export const createMockAIResponse = async (evidence) => {
       confidence: 0.85,
       likelyCause: 'Refund processed but not fully reflected in settlement.',
       explanation: `Difference closely matches the refund amount of ₹${knownRefund}.`,
-      recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
-      evidence: ['REFUND_MATCH'],
+      recommendedAction: AI_ACTIONS.NEEDS_REVIEW
     };
   }
   
@@ -143,8 +140,7 @@ export const createMockAIResponse = async (evidence) => {
       confidence: 0.88,
       likelyCause: 'Manual adjustment missing from reconciliation.',
       explanation: `Difference closely matches a known manual adjustment of ₹${knownAdjustment}.`,
-      recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
-      evidence: ['ADJUSTMENT_MATCH'],
+      recommendedAction: AI_ACTIONS.NEEDS_REVIEW
     };
   }
   
@@ -155,19 +151,17 @@ export const createMockAIResponse = async (evidence) => {
       confidence: 0.35,
       likelyCause: null,
       explanation: `A large unexplained difference of ₹${Math.abs(difference).toFixed(2)} was found. Available records do not fully explain the settlement difference.`,
-      recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
-      evidence: ['LARGE_VARIANCE', 'NO_MATCHING_RECORD'],
+      recommendedAction: AI_ACTIONS.NEEDS_REVIEW
     };
   }
   
   // Small unexplained difference
   return {
-    classification: 'UNEXPLAINED_DISCREPANCY',
-    confidence: 0.65,
-    likelyCause: 'Rounding or minor untracked charge.',
-    explanation: `Small unexplained difference of ₹${Math.abs(difference).toFixed(2)}. Possibly a rounding discrepancy.`,
-    recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
-    evidence: ['SMALL_VARIANCE'],
+    classification: RECON_STATUS.UNEXPLAINED_DISCREPANCY,
+    confidence: 0.60,
+    likelyCause: 'Unknown micro-variance',
+    explanation: 'A small unexplained difference exists. Recommend manual verification.',
+    recommendedAction: AI_ACTIONS.NEEDS_REVIEW
   };
 };
 
@@ -226,7 +220,7 @@ export const investigateException = async (evidence) => {
           ? 'AI investigation timed out after 60 seconds.' 
           : `AI investigation failed: ${error.message || 'Unknown network error'}.`,
         likelyCause: null,
-        evidence: evidence ? Object.keys(evidence) : [],
+
         ai_provider: currentProvider,
         _recovered: false
       };

@@ -254,6 +254,18 @@ export const getDashboardStats = () => {
   };
 };
 
+export const resetWorkflowState = () => {
+  store.payments = [];
+  store.settlements = [];
+  store.reconciliations = [];
+  store.auditLogs = [];
+  store.evaluationResults = [];
+  store.lastReconciliationTime = null;
+  store.activeDataset = null;
+  store.isDataGenerated = false;
+  saveStore();
+};
+
 export const clearAll = () => {
   store = {
     payments: [],

@@ -365,8 +365,7 @@ function buildErrorResponse(errorCode: string): Record<string, unknown> {
     confidence: 0,
     likelyCause: null,
     explanation: buildClientMessage(errorCode),
-    recommendedAction: 'NEEDS_REVIEW',
-    evidence: [],
+    recommendedAction: 'NEEDS_REVIEW'
   }
 }
 
@@ -475,8 +474,7 @@ Use exactly this schema:
   "confidence": number,
   "likelyCause": "string",
   "explanation": "string",
-  "recommendedAction": "AUTO_RESOLVE | NEEDS_REVIEW | UNRESOLVED",
-  "evidence": ["array of strings"]
+  "recommendedAction": "AUTO_RESOLVE | NEEDS_REVIEW"
 }
 
 IMPORTANT: Confidence and recommendedAction are INDEPENDENT concepts.

@@ -21,7 +21,8 @@ import {
   persistReconciliationsToDB,
   persistAuditLogsToDB,
   getDataMode,
-  fetchPersistedReconciledData
+  fetchPersistedReconciledData,
+  resetWorkflowState
 } from '../services/dataService';
 import {
   RECON_STATUS,
@@ -52,6 +53,7 @@ const ReconciliationPage = () => {
   const [dataGenerated, setDataGenerated] = useState(hasData);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(hasData ? 100 : 0);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const [isReconciling, setIsReconciling] = useState(false);
   const [reconProgress, setReconProgress] = useState(0);
@@ -65,8 +67,24 @@ const ReconciliationPage = () => {
     return null;
   });
 
+  const handleGenerateDataClick = () => {
+    if (dataGenerated || getActiveDataset() === 'SYNTHETIC') {
+      setShowResetModal(true);
+    } else {
+      executeDataGeneration();
+    }
+  };
 
-  const handleGenerateData = async () => {
+  const handleConfirmReset = () => {
+    setShowResetModal(false);
+    resetWorkflowState();
+    setDataGenerated(false);
+    setResults(null);
+    setTotalRecords(0);
+    executeDataGeneration();
+  };
+
+  const executeDataGeneration = async () => {
     setIsGenerating(true);
     setGenProgress(0);
     setResults(null);
@@ -539,7 +557,7 @@ const ReconciliationPage = () => {
             Create realistic payment and settlement records with known ground truth for testing.
           </p>
           <button
-            onClick={handleGenerateData}
+            onClick={handleGenerateDataClick}
             disabled={isGenerating || isReconciling}
             className="btn-primary w-full justify-center"
           >
@@ -679,6 +697,44 @@ const ReconciliationPage = () => {
               <KPICard title="Needs Review" value={formatNumber(results.needsReview)}     icon={AlertTriangle}  color="amber"  />
               <KPICard title="Unresolved"   value={formatNumber(results.unresolved || 0)} icon={AlertTriangle}  color="red"    />
               <KPICard title="Processing"   value={formatDuration(results.duration)}      icon={Zap}            color="slate"  />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[var(--bg-surface-1)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Generate New Dataset?</h3>
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                You are about to generate 100 new synthetic records and start a fresh reconciliation workflow.
+              </p>
+              <div className="p-4 rounded-lg mb-4" style={{ backgroundColor: 'var(--danger-subtle)', border: '1px solid var(--danger-border)' }}>
+                <p className="text-sm" style={{ color: 'var(--danger)' }}>
+                  <strong>Warning:</strong> All workflow data from the previous run will be cleared, including reconciliation results, exceptions, AI investigations, transactions/settlements from the previous dataset, dashboard workflow data, and audit history.
+                </p>
+              </div>
+              <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>
+                Your reconciliation settings and preferences will not be changed.
+              </p>
+            </div>
+            <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-surface-2)] flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                onClick={() => setShowResetModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
+                style={{ backgroundColor: 'var(--danger)', color: '#fff' }}
+                onClick={handleConfirmReset}
+              >
+                Generate & Reset
+              </button>
             </div>
           </div>
         </div>
