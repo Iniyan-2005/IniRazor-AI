@@ -15,6 +15,13 @@ const ExceptionsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('NEEDS_REVIEW');
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Manual Resolution Modal State
+  const [resolutionModalOpen, setResolutionModalOpen] = useState(false);
+  const [resolvingException, setResolvingException] = useState(null);
+  const [resolutionCause, setResolutionCause] = useState('FEE_DISCREPANCY');
+  const [resolutionComment, setResolutionComment] = useState('');
+
   const { reconciliations } = getStore();
 
   const handleAction = (reconId, action) => {
@@ -68,6 +75,51 @@ const ExceptionsPage = () => {
     }
 
     toast.success(toastMsg);
+  };
+
+  const handleManualResolve = async () => {
+    if (!resolvingException) return;
+    
+    updateReconciliation(resolvingException.id, { 
+      status: RECON_STATUS.MANUALLY_RESOLVED,
+      resolution_cause: resolutionCause,
+      resolution_comment: resolutionComment
+    });
+    
+    const auditLog = {
+      id: generateId(),
+      reconciliation_id: resolvingException.id,
+      event_type: EVENT_TYPES.HUMAN_RESOLVED,
+      actor: ACTORS.HUMAN,
+      action: 'Manually resolved exception',
+      input_snapshot: { cause: resolutionCause, comment: resolutionComment },
+      reasoning: resolutionComment || 'Manually resolved by user',
+      decision: RECON_STATUS.MANUALLY_RESOLVED,
+      confidence: 1.0,
+      created_at: new Date().toISOString(),
+    };
+    addAuditLog(auditLog);
+
+    setRefreshKey((prev) => prev + 1);
+
+    if (getDataMode() === 'RAZORPAY') {
+      const updatedRecon = getStore().reconciliations.find(r => r.id === resolvingException.id);
+      if (updatedRecon) {
+        Promise.all([
+          persistReconciliationsToDB([updatedRecon]),
+          persistAuditLogsToDB([auditLog])
+        ]).catch(err => {
+          console.error("Failed to persist manual resolution to DB:", err);
+          toast.error("Database update failed");
+        });
+      }
+    }
+
+    toast.success('Exception manually resolved');
+    setResolutionModalOpen(false);
+    setResolvingException(null);
+    setResolutionComment('');
+    setResolutionCause('FEE_DISCREPANCY');
   };
 
   const exceptions = useMemo(
@@ -302,7 +354,15 @@ const ExceptionsPage = () => {
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => handleAction(exception.id, 'mark_unresolved')} className="btn-warning w-full">
+                    <button 
+                      onClick={() => {
+                        setResolvingException(exception);
+                        setResolutionCause('FEE_DISCREPANCY');
+                        setResolutionComment('');
+                        setResolutionModalOpen(true);
+                      }} 
+                      className="btn-warning w-full"
+                    >
                       Investigate Manually
                     </button>
                   )}
@@ -314,6 +374,72 @@ const ExceptionsPage = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Manual Resolution Modal */}
+      {resolutionModalOpen && resolvingException && (
+        <div className="modal-overlay" onClick={() => setResolutionModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '32rem' }}>
+            <div className="modal-header">
+              <h2 className="modal-title">Manual Investigation</h2>
+              <button className="modal-close" onClick={() => setResolutionModalOpen(false)}>
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="modal-body space-y-4">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <p className="text-sm text-slate-500 mb-1">Payment ID</p>
+                <p className="font-mono text-sm font-medium">{resolvingException.payment_id}</p>
+                <div className="mt-3 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">Expected Net</p>
+                    <p className="font-medium text-slate-900">{formatCurrency(resolvingException.expected_amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Actual Net</p>
+                    <p className="font-medium text-slate-900">{formatCurrency(resolvingException.actual_amount)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Discrepancy Cause</label>
+                <select 
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  value={resolutionCause}
+                  onChange={(e) => setResolutionCause(e.target.value)}
+                >
+                  <option value="FEE_DISCREPANCY">Fee Discrepancy</option>
+                  <option value="TAX_DISCREPANCY">Tax Discrepancy</option>
+                  <option value="MISSING_SETTLEMENT">Missing Settlement</option>
+                  <option value="REFUND_DISCREPANCY">Refund Discrepancy</option>
+                  <option value="AMOUNT_MISMATCH">Amount Mismatch</option>
+                  <option value="OTHER">Other / Unexplained</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Investigation Comments</label>
+                <textarea 
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  rows="3"
+                  placeholder="Enter manual investigation details..."
+                  value={resolutionComment}
+                  onChange={(e) => setResolutionComment(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setResolutionModalOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn-primary bg-teal-600 hover:bg-teal-700 border-teal-600" onClick={handleManualResolve}>
+                <CheckCircle2 className="w-4 h-4" />
+                Resolve Exception
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

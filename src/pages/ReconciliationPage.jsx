@@ -85,11 +85,11 @@ const ReconciliationPage = () => {
     };
   }, [showResetModal]);
 
-  const handleGenerateDataClick = () => {
-    if (dataGenerated || getActiveDataset() === 'SYNTHETIC') {
+  const handleDataActionClick = () => {
+    if (dataGenerated) {
       setShowResetModal(true);
     } else {
-      executeDataGeneration();
+      executeDataAction();
     }
   };
 
@@ -99,7 +99,73 @@ const ReconciliationPage = () => {
     setDataGenerated(false);
     setResults(null);
     setTotalRecords(0);
-    executeDataGeneration();
+    executeDataAction();
+  };
+
+  const executeDataAction = () => {
+    if (isSupabaseConfigured) {
+      executeRazorpaySync();
+    } else {
+      executeDataGeneration();
+    }
+  };
+
+  const executeRazorpaySync = async () => {
+    setIsGenerating(true);
+    setGenProgress(0);
+    setResults(null);
+    try {
+      toast.loading('Syncing with Razorpay...', { id: 'rzp-sync' });
+      
+      const progressInterval = setInterval(() => {
+        setGenProgress((prev) => Math.min(prev + 10, 90));
+      }, 300);
+
+      let result;
+      try {
+        result = await syncRazorpayData();
+        if (!result.success) throw new Error(result.message || 'Razorpay sync returned no data');
+      } catch (rzpErr) {
+        clearInterval(progressInterval);
+        console.error("Razorpay API failure:", rzpErr);
+        const { payments, settlements } = generateSyntheticData(100);
+        setPayments(payments);
+        setSettlements(settlements);
+        setActiveDataset('SYNTHETIC');
+        setDataMode('DEMO', 'AUTO_FALLBACK');
+        markDataGenerated();
+        setDataGenerated(true);
+        setGenProgress(100);
+        setIsGenerating(false);
+        toast.error('Razorpay API unavailable — switched to Demo Mode.', { id: 'rzp-sync' });
+        return; 
+      }
+
+      toast.loading('Loading persisted records from database...', { id: 'rzp-sync' });
+      const fetchResult = await fetchPersistedPayments();
+      
+      clearInterval(progressInterval);
+      setGenProgress(100);
+      
+      if (fetchResult.success) {
+        setPayments(fetchResult.data.payments || []);
+        setSettlements(fetchResult.data.settlements || []);
+        setActiveDataset('RAZORPAY');
+        setDataMode('RAZORPAY', 'MANUAL');
+        markDataGenerated();
+        setDataGenerated(true);
+        await fetchPersistedReconciledData();
+        toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
+      } else {
+        throw new Error(fetchResult.message || 'Failed to fetch persisted data');
+      }
+    } catch (dbErr) {
+      setGenProgress(0);
+      console.error("Database/Supabase failure:", dbErr);
+      toast.error('Database error: ' + dbErr.message, { id: 'rzp-sync' });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const executeDataGeneration = async () => {
@@ -107,7 +173,6 @@ const ReconciliationPage = () => {
     setGenProgress(0);
     setResults(null);
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setGenProgress((prev) => Math.min(prev + 10, 90));
       }, 150);
@@ -506,55 +571,7 @@ const ReconciliationPage = () => {
             {/* Razorpay Sync button */}
             {isSupabaseConfigured && (
               <button
-                onClick={async () => {
-                  try {
-                    toast.loading('Syncing with Razorpay...', { id: 'rzp-sync' });
-                    
-                    // 1. Razorpay API Sync
-                    let result;
-                    try {
-                      result = await syncRazorpayData();
-                      if (!result.success) {
-                        throw new Error(result.message || 'Razorpay sync returned no data');
-                      }
-                    } catch (rzpErr) {
-                      console.error("Razorpay API failure:", rzpErr);
-                      // Automatic Demo Fallback
-                      const { payments, settlements } = generateSyntheticData(100);
-                      setPayments(payments);
-                      setSettlements(settlements);
-                      setActiveDataset('SYNTHETIC');
-                      setDataMode('DEMO', 'AUTO_FALLBACK');
-                      markDataGenerated();
-                      setDataGenerated(true);
-                      toast.error('Razorpay API unavailable — switched to Demo Mode.', { id: 'rzp-sync' });
-                      return; // Exit early, do not attempt database fetch
-                    }
-
-                    // 2. Database Fetch (Must NOT trigger Demo Mode fallback)
-                    toast.loading('Loading persisted records from database...', { id: 'rzp-sync' });
-                    const fetchResult = await fetchPersistedPayments();
-                    
-                    if (fetchResult.success) {
-                      setPayments(fetchResult.data.payments || []);
-                      setSettlements(fetchResult.data.settlements || []);
-                      setActiveDataset('RAZORPAY');
-                      setDataMode('RAZORPAY', 'MANUAL');
-                      markDataGenerated();
-                      setDataGenerated(true);
-                      
-                      // Phase 8: Hydrate Dashboard state from Supabase
-                      await fetchPersistedReconciledData();
-
-                      toast.success(`Razorpay Test Mode connected — data synchronized.`, { id: 'rzp-sync' });
-                    } else {
-                      throw new Error(fetchResult.message || 'Failed to fetch persisted data');
-                    }
-                  } catch (dbErr) {
-                    console.error("Database/Supabase failure:", dbErr);
-                    toast.error('Database error: ' + dbErr.message, { id: 'rzp-sync' });
-                  }
-                }}
+                onClick={handleDataActionClick}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-colors"
               >
                 <CreditCard className="w-3.5 h-3.5" />
@@ -568,43 +585,51 @@ const ReconciliationPage = () => {
 
       {/* Steps */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Step 1: Generate Data */}
+        {/* Step 1: Generate/Sync Data */}
         <div className="card p-6" style={{ borderTop: '4px solid var(--primary)' }}>
           <div className="flex items-center gap-3 mb-4">
             <div style={{ backgroundColor: 'var(--primary-subtle)', padding: '0.625rem', borderRadius: '0.5rem' }}>
               <Database style={{ width: '1.25rem', height: '1.25rem', color: 'var(--primary-text)' }} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>1. Generate Data</h2>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {isSupabaseConfigured ? '1. Sync Data' : '1. Generate Data'}
+              </h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {getActiveDataset() === 'SYNTHETIC' && dataGenerated 
-                  ? `${getStore().payments.length} synthetic records` 
-                  : '100 synthetic records'}
+                {dataGenerated 
+                  ? `${getStore().payments.length} ${getActiveDataset() === 'SYNTHETIC' ? 'synthetic' : 'Razorpay'} records` 
+                  : (isSupabaseConfigured ? 'Fetch Razorpay records' : '100 synthetic records')}
               </p>
             </div>
           </div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            Create realistic payment and settlement records with known ground truth for testing.
+            {isSupabaseConfigured 
+              ? 'Fetch live payment and settlement records from the Razorpay API.' 
+              : 'Create realistic payment and settlement records with known ground truth for testing.'}
           </p>
           <button
-            onClick={handleGenerateDataClick}
+            onClick={handleDataActionClick}
             disabled={isGenerating || isReconciling}
             className="btn-primary w-full justify-center"
           >
             {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span>{isGenerating ? 'Generating...' : dataGenerated ? 'Regenerate Data' : 'Generate 100 Records'}</span>
+            <span>
+              {isGenerating 
+                ? (isSupabaseConfigured ? 'Syncing...' : 'Generating...') 
+                : dataGenerated 
+                  ? (isSupabaseConfigured ? 'Sync Latest Data' : 'Regenerate Data') 
+                  : (isSupabaseConfigured ? 'Sync Razorpay Records' : 'Generate 100 Records')}
+            </span>
           </button>
           {isGenerating && (
             <div className="mt-4">
-              <ProgressBar current={genProgress} total={100} label="Generating records..." />
+              <ProgressBar current={genProgress} total={100} label={isSupabaseConfigured ? "Fetching from API..." : "Generating records..."} />
             </div>
           )}
           {dataGenerated && !isGenerating && (
             <div className="mt-4 flex items-center text-sm font-medium" style={{ color: 'var(--success)' }}>
               <CheckCircle2 className="w-4 h-4 mr-1.5" /> 
-              {getActiveDataset() === 'SYNTHETIC' 
-                ? `${getStore().payments.length} synthetic record${getStore().payments.length === 1 ? '' : 's'} ready` 
-                : `${getStore().payments.length} Razorpay payment${getStore().payments.length === 1 ? '' : 's'} ready`}
+              {`${getStore().payments.length} ${getActiveDataset() === 'SYNTHETIC' ? 'synthetic' : 'Razorpay'} record${getStore().payments.length === 1 ? '' : 's'} ready`}
             </div>
           )}
         </div>

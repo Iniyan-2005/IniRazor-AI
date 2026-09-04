@@ -19,6 +19,7 @@ export const RECON_STATUS = {
   NEEDS_REVIEW: 'NEEDS_REVIEW',
   UNRESOLVED: 'UNRESOLVED',
   AI_UNAVAILABLE: 'AI_UNAVAILABLE',
+  MANUALLY_RESOLVED: 'MANUALLY_RESOLVED',
 }
 
 // AI recommended actions
@@ -58,6 +59,7 @@ export const EVENT_TYPES = {
   HUMAN_APPROVED: 'HUMAN_APPROVED',
   HUMAN_REJECTED: 'HUMAN_REJECTED',
   HUMAN_UNRESOLVED: 'HUMAN_UNRESOLVED',
+  HUMAN_RESOLVED: 'HUMAN_RESOLVED',
   BATCH_STARTED: 'BATCH_STARTED',
   BATCH_COMPLETED: 'BATCH_COMPLETED',
   DATA_GENERATED: 'DATA_GENERATED',
@@ -81,6 +83,7 @@ export const DEFAULT_CONFIG = {
 export const STATUS_COLORS = {
   MATCHED: { bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-500' },
   AI_RESOLVED: { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' },
+  MANUALLY_RESOLVED: { bg: 'bg-teal-100', text: 'text-teal-800', dot: 'bg-teal-500' },
   NEEDS_REVIEW: { bg: 'bg-amber-100', text: 'text-amber-800', dot: 'bg-amber-500' },
   UNRESOLVED: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
   PENDING: { bg: 'bg-slate-100', text: 'text-slate-800', dot: 'bg-slate-500' },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Brain, ArrowRight, ShieldCheck, Zap, Database, TrendingUp, AlertTriangle, Play, Menu, X, CheckCircle2, ChevronRight, LineChart, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Brain, ArrowRight, ShieldCheck, Zap, Database, TrendingUp, AlertTriangle, Play, Menu, X, CheckCircle2, ChevronRight, LineChart, MessageSquare, ShieldAlert, ScrollText, Lock, Eye } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import logo from '../assets/logo.jpg';
 import welcomeBg from '../assets/welcome-bg.png';
@@ -120,34 +120,28 @@ const LandingPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const insightData = [
+  const exceptionData = [
     {
-      q: "Why did my expenses increase this month?",
-      headline: "Your expenses increased by",
-      highlight: "18.4%",
-      amount: "(₹1,42,000)",
+      id: "PAY_8924",
+      headline: "Amount Mismatch",
+      expected: "₹12,500.00",
+      actual: "₹12,350.00",
+      diff: "₹150.00",
       color: "text-red-500",
-      subtext: "The largest contributors were:",
-      breakdown: [
-        { name: 'Marketing', val: '+32%', icon: TrendingUp },
-        { name: 'Infrastructure', val: '+14%', icon: TrendingUp },
-        { name: 'Software', val: '+9%', icon: TrendingUp }
-      ],
-      summary: "The increase is primarily driven by higher campaign spending on Meta Ads."
+      aiReasoning: "The ₹150 discrepancy perfectly matches the standard 1.2% cross-border markup fee which was not included in the expected base settlement.",
+      confidence: 94,
+      action: "AUTO_RESOLVE"
     },
     {
-      q: "What's our current runway?",
-      headline: "Based on current burn, runway is",
-      highlight: "14 months",
-      amount: "(extended by 2m)",
-      color: "text-emerald-500",
-      subtext: "Key runway factors:",
-      breakdown: [
-        { name: 'Cash Balance', val: '₹1.2Cr', icon: Database },
-        { name: 'Avg Burn', val: '₹8.5L/mo', icon: AlertTriangle },
-        { name: 'Revenue Trend', val: '+12% MoM', icon: TrendingUp }
-      ],
-      summary: "Runway is healthy, primarily extended by recent consistent revenue growth."
+      id: "PAY_9102",
+      headline: "Unexplained Deduction",
+      expected: "₹45,000.00",
+      actual: "₹42,000.00",
+      diff: "₹3,000.00",
+      color: "text-red-500",
+      aiReasoning: "A massive ₹3,000 deduction is present without corresponding tax or fee records. This anomaly cannot be safely explained and requires human approval.",
+      confidence: 62,
+      action: "NEEDS_REVIEW"
     }
   ];
 
@@ -288,14 +282,12 @@ const LandingPage = () => {
                   </motion.div>
 
                   <motion.h1 variants={staggerItem} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.15]">
-                    Your AI Finance <br className="hidden lg:block" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-                      Controller
-                    </span> for Every Transaction.
+                    Your AI-Powered <br className="hidden lg:block" />
+<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Reconciliation</span> Engine.
                   </motion.h1>
 
                   <motion.p variants={staggerItem} className="text-lg sm:text-xl mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0 text-[var(--text-secondary)]">
-                    Connect your payment data and let AI turn thousands of transactions into clear insights, anomalies, trends, and actions.
+                    Automate payment-to-settlement matching. Let deterministic math handle standard fees, and AI safely investigate complex discrepancies.
                   </motion.p>
 
                   <motion.div variants={staggerItem} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
@@ -343,8 +335,8 @@ const LandingPage = () => {
                           <TrendingUp className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Revenue Trend</p>
-                          <p className="text-[10px] sm:text-xs font-medium text-[var(--success)]">+18.4% this week</p>
+                          <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Payment Matched</p>
+<p className="text-[10px] sm:text-xs font-medium text-[var(--success)]">₹1,25,000 settled</p>
                         </div>
                       </motion.div>
 
@@ -356,8 +348,8 @@ const LandingPage = () => {
                           <AlertTriangle className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Anomaly Detected</p>
-                          <p className="text-[10px] sm:text-xs font-medium text-[var(--warning)]">Unusual marketing spend</p>
+                          <p className="text-[10px] sm:text-xs font-semibold text-[var(--text-primary)]">Exception Queued</p>
+                          <p className="text-[10px] sm:text-xs font-medium text-[var(--warning)]">Amount mismatch (₹120)</p>
                         </div>
                       </motion.div>
 
@@ -369,8 +361,8 @@ const LandingPage = () => {
                           <Brain className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-[var(--text-primary)]">AI Insight</p>
-                          <p className="text-xs text-[var(--text-muted)]">Cash flow optimized</p>
+                          <p className="text-xs font-semibold text-[var(--text-primary)]">AI Analysis</p>
+                          <p className="text-xs text-[var(--text-muted)]">Missing tax identified</p>
                         </div>
                       </motion.div>
                     </div>
@@ -389,19 +381,23 @@ const LandingPage = () => {
                   variants={fadeIn}
                 >
                   <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 leading-tight">
-                    Your transactions are telling a story. <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-                      Are you listening?
-                    </span>
+                    Thousands of transactions. <br />
+<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Are you matching them all?</span>
                   </h2>
 
                   <div className="card p-6 shadow-sm overflow-hidden relative border-[var(--border)]">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--bg-surface)] z-10"></div>
                     <div className="space-y-3 opacity-60">
-                      {['TXN_8921 • Amazon Web Serv...', 'TXN_8922 • Stripe Payout', 'TXN_8923 • Facebook Ads', 'TXN_8924 • GitHub Global', 'TXN_8925 • Google Workspace'].map((txn, i) => (
+                      {[
+                        { desc: 'PAY_8921 • Settled perfectly', val: 'Matched', color: 'text-emerald-500' },
+                        { desc: 'PAY_8922 • Missing settlement', val: 'Error', color: 'text-red-500' },
+                        { desc: 'PAY_8923 • Known fee deduction', val: 'Matched', color: 'text-emerald-500' },
+                        { desc: 'PAY_8924 • Amount mismatch', val: 'Review', color: 'text-amber-500' },
+                        { desc: 'PAY_8925 • Tax discrepancy', val: 'Matched', color: 'text-emerald-500' }
+                      ].map((item, i) => (
                         <motion.div key={i} initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="flex justify-between items-center text-sm font-mono">
-                          <span className="text-[var(--text-muted)]">{txn}</span>
-                          <span className={i === 1 ? "text-emerald-500" : "text-red-500"}>{i === 1 ? '+₹1,25,000' : (i === 0 ? '-₹42,000' : (i === 2 ? '-₹18,500' : (i === 3 ? '-₹899' : '-₹2,400')))}</span>
+                          <span className="text-[var(--text-muted)]">{item.desc}</span>
+                          <span className={item.color}>{item.val}</span>
                         </motion.div>
                       ))}
                     </div>
@@ -422,14 +418,14 @@ const LandingPage = () => {
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}>
                         <Brain className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold">AI Finance Controller</h3>
+                      <h3 className="text-xl font-bold">Intelligent Reconciliation</h3>
                     </div>
 
                     <div className="space-y-4">
                       {[
-                        { icon: TrendingUp, color: 'text-blue-500', text: 'Marketing spend increased 23% this month.' },
-                        { icon: AlertTriangle, color: 'text-amber-500', text: '3 transactions show unusual behaviour.' },
-                        { icon: Zap, color: 'text-indigo-500', text: 'Your strongest revenue period is between 7 PM and 10 PM.' }
+                        { icon: Database, color: 'text-blue-500', text: '100 transactions synced & processed.' },
+                        { icon: CheckCircle2, color: 'text-emerald-500', text: 'Deterministic engine auto-matched 94 records.' },
+                        { icon: Brain, color: 'text-indigo-500', text: 'AI safely investigated 6 complex exceptions.' }
                       ].map((item, i) => (
                         <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }} viewport={{ once: true }} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface-2)]">
                           <p className="text-sm font-medium flex items-start gap-2">
@@ -449,8 +445,8 @@ const LandingPage = () => {
           <section id="how-it-works" className="py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} className="text-center max-w-3xl mx-auto mb-16">
-                <h2 className="text-3xl font-bold tracking-tight mb-4">From Raw Data to Clear Intelligence</h2>
-                <p className="text-lg text-[var(--text-secondary)]">Three simple steps to unlock the full potential of your financial data.</p>
+                <h2 className="text-3xl font-bold tracking-tight mb-4">From Raw Data to Complete Reconciliation</h2>
+<p className="text-lg text-[var(--text-secondary)]">A fail-safe pipeline combining deterministic mathematics with AI intelligence.</p>
               </motion.div>
 
               <div className="grid md:grid-cols-3 gap-8 relative">
@@ -487,8 +483,8 @@ const LandingPage = () => {
           <section id="features" className="py-24 bg-[var(--bg-surface-2)]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} className="mb-16">
-                <h2 className="text-3xl font-bold tracking-tight mb-4">Everything You Need to Understand Your Business</h2>
-                <p className="text-lg max-w-2xl text-[var(--text-secondary)]">Not just another dashboard. A comprehensive suite of AI tools designed to decode complex financial activity.</p>
+                <h2 className="text-3xl font-bold tracking-tight mb-4">Enterprise-Grade Financial Safety</h2>
+<p className="text-lg max-w-2xl text-[var(--text-secondary)]">Not just a dashboard. A robust reconciliation pipeline built for strict FinOps compliance and accuracy.</p>
               </motion.div>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -497,81 +493,57 @@ const LandingPage = () => {
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-[var(--ai-subtle)] text-[var(--ai)]">
                       <Brain className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3">AI-Powered Insights</h3>
-                    <p className="mb-8 text-[var(--text-secondary)]">AI converts complex financial data into understandable business intelligence. It reads between the lines of your spreadsheet.</p>
+                    <h3 className="text-2xl font-bold mb-3">Hybrid Reconciliation Engine</h3>
+<p className="mb-8 text-[var(--text-secondary)]">Math for the expected, AI for the unexpected. Rule-based engines handle standard deductions, while NVIDIA NIM investigates complex amount mismatches.</p>
                   </div>
                   <div className="mt-auto p-5 rounded-xl border border-[var(--border)] shadow-sm bg-[var(--bg-surface)] transform transition-transform group-hover:-translate-y-1">
-                    <div className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-[var(--primary)] text-white">AI</div>
-                      <div>
-                        <p className="text-sm font-medium mb-1">Your marketing ROI is up 12%.</p>
-                        <p className="text-xs text-[var(--text-muted)]">This correlates strongly with the recent Google Ads campaign launched on Tuesday.</p>
-                      </div>
-                    </div>
+                    <div className="flex items-center justify-between w-full">
+  <div className="flex-1 border-r border-[var(--border)] px-4 text-center"><p className="text-xl font-bold text-[var(--success)]">94%</p><p className="text-xs text-[var(--text-muted)]">Deterministic Match</p></div>
+  <div className="flex-1 px-4 text-center"><p className="text-xl font-bold text-[var(--ai)]">6%</p><p className="text-xs text-[var(--text-muted)]">AI Investigated</p></div>
+</div>
                   </div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="card p-8 lg:col-span-1 flex flex-col justify-between overflow-hidden relative group hover:border-[var(--border-strong)] transition-colors">
                   <div className="relative z-10">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-[var(--warning-subtle)] text-[var(--warning)]">
-                      <ShieldAlert className="w-6 h-6" />
+                      <Lock className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3">Anomaly Detection</h3>
-                    <p className="mb-8 text-[var(--text-secondary)]">Identify unusual transactions, duplicate payments, and potential financial risks before they impact your runway.</p>
+                    <h3 className="text-2xl font-bold mb-3">Financial Safety First</h3>
+<p className="mb-8 text-[var(--text-secondary)]">Fail-safe architecture. Strict confidence thresholds ensure ambiguous transactions are never auto-resolved without explicit human approval.</p>
                   </div>
                   <div className="mt-auto p-4 rounded-xl border border-red-500/20 bg-red-500/5 transform transition-transform group-hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-red-500 uppercase flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> High Risk Detected
-                      </span>
-                      <span className="text-xs text-red-500/80">Just now</span>
-                    </div>
-                    <p className="text-sm font-medium mb-1 text-[var(--text-primary)]">Duplicate subscription payment</p>
-                    <p className="text-xs text-red-500/80 font-mono">₹4,200 charged twice by 'Atlassian' within 24h.</p>
+                      <span className="text-xs font-bold text-[var(--warning)] uppercase flex items-center gap-1">
+    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Confidence &lt; 90%
+  </span>
+</div>
+<p className="text-sm font-medium mb-1 text-[var(--text-primary)]">AI Auto-Resolve Blocked</p>
+<p className="text-xs text-[var(--text-muted)] font-mono">Transaction routed to manual review queue.</p>
                   </div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} viewport={{ once: true }} className="card p-8 lg:col-span-1 flex flex-col justify-between overflow-hidden relative group hover:border-[var(--border-strong)] transition-colors">
                   <div className="relative z-10">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-[var(--success-subtle)] text-[var(--success)]">
-                      <TrendingUp className="w-6 h-6" />
+                      <ScrollText className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3">Revenue & Spending Intelligence</h3>
-                    <p className="mb-8 text-[var(--text-secondary)]">Understand exactly where money comes from and where it goes with real-time categorisation.</p>
+                    <h3 className="text-2xl font-bold mb-3">Immutable Audit Trail</h3>
+<p className="mb-8 text-[var(--text-secondary)]">100% Traceability. Every deterministic match, AI reasoning, and human intervention is logged chronologically for strict enterprise compliance.</p>
                   </div>
-                  <div className="mt-auto flex items-end gap-2 h-24">
-                    {[40, 60, 75, 90].map((h, i) => {
-                      const opacities = ['bg-emerald-500/40', 'bg-emerald-500/60', 'bg-emerald-500/80', 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]'];
-                      return (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0 }}
-                          whileInView={{ height: `${h}%` }}
-                          whileHover={{ height: i === 3 ? '100%' : `${h + 5}%` }}
-                          transition={{ duration: 0.6, delay: 0.4 + (i * 0.1) }}
-                          viewport={{ once: true }}
-                          className={`w-1/4 rounded-t-md transition-colors ${opacities[i]}`}
-                        ></motion.div>
-                      );
-                    })}
-                  </div>
+                  <div className="mt-auto bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-3"><p className="text-[10px] font-mono text-[var(--text-muted)] mb-1">[01:22:45] EVENT_TYPE: AI_INVESTIGATION</p><p className="text-xs font-medium">Actor: AI_AGENT • Decision: NEEDS_REVIEW</p></div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} viewport={{ once: true }} className="card p-8 md:col-span-2 lg:col-span-1 flex flex-col justify-between overflow-hidden relative group hover:border-[var(--border-strong)] transition-colors">
                   <div className="relative z-10">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-[var(--primary-subtle)] text-[var(--primary)]">
-                      <MessageSquare className="w-6 h-6" />
+                      <AlertTriangle className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3">Ask Your Finance Data</h3>
-                    <p className="mb-8 text-[var(--text-secondary)]">Allow users to interact with their financial information using natural language. No SQL required.</p>
+                    <h3 className="text-2xl font-bold mb-3">Exceptions Queue</h3>
+<p className="mb-8 text-[var(--text-secondary)]">A dedicated workspace for FinOps teams to manually investigate, approve, or reject flagged transactions with full AI-generated context.</p>
                   </div>
                   <div className="mt-auto space-y-3 transform transition-transform group-hover:-translate-y-1">
-                    <div className="ml-auto w-3/4 p-3 rounded-2xl rounded-tr-sm text-sm text-white bg-[var(--primary)]">
-                      How much did we spend on software last month?
-                    </div>
-                    <div className="w-5/6 p-3 rounded-2xl rounded-tl-sm text-sm border border-[var(--border)] shadow-sm bg-[var(--bg-surface)]">
-                      You spent ₹1,42,500 on software last month, up 8% from the previous month. Top vendor: AWS.
-                    </div>
+                    <div className="flex gap-2"><button className="flex-1 py-2 rounded-lg bg-[var(--success-subtle)] text-[var(--success)] text-xs font-bold flex items-center justify-center gap-1"><CheckCircle2 className="w-3.5 h-3.5"/> Approve</button><button className="flex-1 py-2 rounded-lg bg-[var(--danger-subtle)] text-[var(--danger)] text-xs font-bold flex items-center justify-center gap-1"><X className="w-3.5 h-3.5"/> Reject</button></div>
                   </div>
                 </motion.div>
               </div>
@@ -589,16 +561,16 @@ const LandingPage = () => {
                     <span>Meet Your New Analyst</span>
                   </div>
                   <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 leading-tight">
-                    Stop digging through spreadsheets. <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400">
-                      Start asking questions.
-                    </span>
+                    Don't just flag mismatches. <br />
+<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400">
+Understand them.
+</span>
                   </h2>
                   <p className="text-lg mb-8 text-[var(--text-secondary)]">
-                    Our AI Finance Controller doesn't just show you charts. It understands your business context and provides direct answers to complex financial questions.
+                    When mathematical rules fail, our AI steps in to analyze the raw transaction evidence, providing your FinOps team with a likely cause, explanation, and a safe recommendation.
                   </p>
                   <button onClick={() => navigate('/login')} className="inline-flex items-center gap-2 font-medium transition-colors hover:gap-3 text-[var(--primary)]">
-                    Ask Your Data <ArrowRight className="w-4 h-4" />
+                    Investigate Exceptions <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.div>
 
@@ -611,7 +583,7 @@ const LandingPage = () => {
                         <Brain className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-sm">IniRazor Analyst</h4>
+                        <h4 className="font-semibold text-sm">Exception Investigation</h4>
                         <p className="text-xs flex items-center gap-1 text-[var(--success)]">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                           Online and analyzing
@@ -629,57 +601,59 @@ const LandingPage = () => {
                           transition={{ duration: 0.3 }}
                           className="space-y-6"
                         >
-                          <div className="flex justify-end">
-                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm bg-[var(--bg-surface-2)]">
-                              {insightData[activeInsight].q}
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center mt-1 shadow-sm" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--ai) 100%)' }}>
-                              <Brain className="w-4 h-4 text-white" />
-                            </div>
-                            <div className="space-y-3 w-full">
-                              <div className="rounded-2xl rounded-tl-sm p-4 shadow-sm border bg-[var(--bg-surface)] border-[var(--border-subtle)]">
-                                <p className="text-sm font-medium mb-3">
-                                  {insightData[activeInsight].headline} <span className={insightData[activeInsight].color}>{insightData[activeInsight].highlight}</span> {insightData[activeInsight].amount}.
-                                </p>
-                                <p className="text-sm mb-3 text-[var(--text-secondary)]">{insightData[activeInsight].subtext}</p>
-                                <div className="space-y-2 mb-3">
-                                  {insightData[activeInsight].breakdown.map((it, i) => (
-                                    <div key={i} className="flex justify-between items-center text-sm p-2 rounded bg-[var(--bg-surface-2)]">
-                                      <span className="font-medium flex items-center gap-2"><it.icon className={`w-3.5 h-3.5 ${insightData[activeInsight].color}`} /> {it.name}</span>
-                                      <span className={`font-mono ${insightData[activeInsight].color}`}>{it.val}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                                <p className="text-sm font-medium pt-2 border-t border-[var(--border-subtle)]">
-                                  {insightData[activeInsight].summary}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                          <div className="space-y-4">
+  <div className="flex justify-between items-center p-3 rounded-lg bg-[var(--bg-surface-2)] border border-[var(--border)]">
+    <span className="text-sm font-semibold text-[var(--text-secondary)]">Transaction ID</span>
+    <span className="text-sm font-mono font-bold">{exceptionData[activeInsight].id}</span>
+  </div>
+  <div className="grid grid-cols-3 gap-2">
+    <div className="p-3 rounded-lg bg-[var(--bg-surface-2)] border border-[var(--border)] text-center">
+      <p className="text-xs text-[var(--text-muted)] mb-1">Expected</p>
+      <p className="text-sm font-bold">{exceptionData[activeInsight].expected}</p>
+    </div>
+    <div className="p-3 rounded-lg bg-[var(--bg-surface-2)] border border-[var(--border)] text-center">
+      <p className="text-xs text-[var(--text-muted)] mb-1">Actual</p>
+      <p className="text-sm font-bold">{exceptionData[activeInsight].actual}</p>
+    </div>
+    <div className="p-3 rounded-lg bg-[var(--danger-subtle)] border border-[color-mix(in_srgb,var(--danger)_30%,transparent)] text-center">
+      <p className="text-xs text-[var(--danger)] mb-1">Difference</p>
+      <p className="text-sm font-bold text-[var(--danger)]">{exceptionData[activeInsight].diff}</p>
+    </div>
+  </div>
+  
+  <div className="rounded-xl p-4 border border-[color-mix(in_srgb,var(--ai)_30%,transparent)] bg-[var(--ai-subtle)]">
+    <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center gap-2 text-[var(--ai)]">
+        <Brain className="w-4 h-4" />
+        <span className="text-xs font-bold uppercase tracking-wider">AI Analysis</span>
+      </div>
+      <div className="flex items-center gap-1 text-[var(--success)] bg-[var(--success-subtle)] px-2 py-1 rounded text-xs font-bold">
+        Confidence: {exceptionData[activeInsight].confidence}%
+      </div>
+    </div>
+    <p className="text-sm text-[var(--text-primary)] font-medium leading-relaxed">
+      {exceptionData[activeInsight].aiReasoning}
+    </p>
+  </div>
+</div>
                         </motion.div>
                       </AnimatePresence>
 
                       <div className="flex gap-2 justify-end border-t border-[var(--border-subtle)] pt-4 mt-2">
-                        <span className="text-xs text-[var(--text-muted)] self-center mr-auto">Suggested queries:</span>
+                        <span className="text-xs text-[var(--text-muted)] self-center mr-auto">View Exception Cases:</span>
                         <button onClick={() => setActiveInsight(0)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeInsight === 0 ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'}`}>
-                          Expenses
+                          Amount Mismatch
                         </button>
                         <button onClick={() => setActiveInsight(1)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${activeInsight === 1 ? 'bg-[var(--primary)] text-white border-[var(--primary)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]'}`}>
-                          Runway
+                          Unexplained Discrepancy
                         </button>
                       </div>
                     </div>
 
                     <div className="px-5 py-3 border-t flex items-center gap-3 border-[var(--border)] bg-[var(--bg-surface-2)]">
-                      <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-full px-4 py-2 text-sm text-[var(--text-muted)] flex items-center">
-                        Ask a follow-up question...
-                      </div>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--primary)] text-white opacity-50">
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
+                      <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-white bg-[var(--primary)] hover:bg-[var(--primary-dark)] transition-colors">
+  <CheckCircle2 className="w-4 h-4" /> Approve & Resolve
+</button>
                     </div>
                   </div>
                 </motion.div>
