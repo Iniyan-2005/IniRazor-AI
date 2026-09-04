@@ -6,7 +6,9 @@ export const calculateExpectedNet = (settlement) => {
 };
 
 export const classifyDifference = (payment, settlement, difference, config = DEFAULT_CONFIG) => {
-  const tolerance = config.TOLERANCE_AMOUNT || config.tolerance || 1.0;
+  // Settings page uses config.toleranceAmount. Fallback to constant.
+  const tolerance = config?.toleranceAmount ?? config?.TOLERANCE_AMOUNT ?? 1.0;
+  
   if (Math.abs(difference) <= tolerance) return RECON_STATUS.MATCHED;
 
   // Fee discrepancy

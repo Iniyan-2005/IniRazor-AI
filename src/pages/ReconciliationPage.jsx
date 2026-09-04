@@ -46,16 +46,24 @@ import { useNavigate } from 'react-router-dom';
 
 const ReconciliationPage = () => {
   const navigate = useNavigate();
-  const [dataGenerated, setDataGenerated] = useState(isReady());
+  const store = getStore();
+  const hasData = isReady() || store.payments.length > 0;
+  
+  const [dataGenerated, setDataGenerated] = useState(hasData);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [genProgress, setGenProgress] = useState(0);
+  const [genProgress, setGenProgress] = useState(hasData ? 100 : 0);
 
   const [isReconciling, setIsReconciling] = useState(false);
   const [reconProgress, setReconProgress] = useState(0);
-  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalRecords, setTotalRecords] = useState(store.payments.length || 0);
   const [reconStep, setReconStep] = useState('');
   
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState(() => {
+    if (store.reconciliations && store.reconciliations.length > 0) {
+      return getDashboardStats();
+    }
+    return null;
+  });
 
 
   const handleGenerateData = async () => {

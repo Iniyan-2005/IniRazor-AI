@@ -16,6 +16,24 @@ let store = {
   lastReconciliationTime: null,
 };
 
+try {
+  const persisted = localStorage.getItem('inirazor_store');
+  if (persisted) {
+    const parsed = JSON.parse(persisted);
+    store = { ...store, ...parsed };
+  }
+} catch (e) {
+  console.warn('Could not restore state from localStorage', e);
+}
+
+const saveStore = () => {
+  try {
+    localStorage.setItem('inirazor_store', JSON.stringify(store));
+  } catch (e) {
+    console.warn('Could not save state to localStorage', e);
+  }
+};
+
 export const getStore = () => store;
 
 export const getActiveDataset = () => store.activeDataset;
@@ -26,6 +44,7 @@ export const setActiveDataset = (dataset) => {
     store.reconciliations = [];
   }
   store.activeDataset = dataset;
+  saveStore();
 };
 
 export const getDataMode = () => store.dataMode;
@@ -35,28 +54,34 @@ export const getModeSource = () => store.modeSource;
 export const setDataMode = (mode, source) => {
   store.dataMode = mode;
   store.modeSource = source;
+  saveStore();
 };
 
 export const getAiProvider = () => store.aiProvider;
 
 export const setAiProvider = (provider) => {
   store.aiProvider = provider;
+  saveStore();
 };
 
 export const setPayments = (payments) => {
   store.payments = payments;
+  saveStore();
 };
 
 export const setSettlements = (settlements) => {
   store.settlements = settlements;
+  saveStore();
 };
 
 export const setReconciliations = (reconciliations) => {
   store.reconciliations = reconciliations;
+  saveStore();
 };
 
 export const setAuditLogs = (logs) => {
   store.auditLogs = logs;
+  saveStore();
 };
 
 export const fetchPersistedReconciledData = async () => {
@@ -101,6 +126,7 @@ export const addAuditLog = (log) => {
     created_at: log.created_at || new Date().toISOString(),
     ...log
   });
+  saveStore();
 };
 
 export const getAuditLogs = () => {
@@ -113,12 +139,14 @@ export const getAuditLogsForReconciliation = (reconciliationId) => {
 
 export const setEvaluationResults = (results) => {
   store.evaluationResults = results;
+  saveStore();
 };
 
 export const getConfig = () => store.config;
 
 export const updateConfig = (newConfig) => {
   store.config = { ...store.config, ...newConfig };
+  saveStore();
 };
 
 export const getReconciliationById = (id) => {
@@ -133,6 +161,7 @@ export const updateReconciliation = (id, updates) => {
   const index = store.reconciliations.findIndex(r => r.id === id);
   if (index !== -1) {
     store.reconciliations[index] = { ...store.reconciliations[index], ...updates };
+    saveStore();
   }
 };
 
@@ -235,12 +264,17 @@ export const clearAll = () => {
     config: { confidenceThreshold: 0.90, toleranceAmount: 1.00 },
     isDataGenerated: false,
     activeDataset: null,
+    dataMode: null,
+    modeSource: null,
+    aiProvider: 'NVIDIA',
     lastReconciliationTime: null,
   };
+  saveStore();
 };
 
 export const markDataGenerated = () => {
   store.isDataGenerated = true;
+  saveStore();
 };
 
 export const isReady = () => {

@@ -6,7 +6,7 @@
 
 import { AI_ACTIONS, RECON_STATUS } from '../utils/constants.js';
 import { isSupabaseConfigured, supabase } from './supabase.js';
-import { getAiProvider } from './dataService.js';
+import { getAiProvider, getConfig } from './dataService.js';
 
 /**
  * Validate AI response has correct structure and safe values
@@ -30,10 +30,7 @@ export const validateAIResponse = (response) => {
     action = AI_ACTIONS.NEEDS_REVIEW;
   }
 
-  // Safety rule: never auto-resolve with low confidence
-  if (response.confidence < 0.90 && action === AI_ACTIONS.AUTO_RESOLVE) {
-    action = AI_ACTIONS.NEEDS_REVIEW;
-  }
+  // The confidence check is now managed dynamically by the backend and frontend configs.
 
   // Clamp confidence to 0-1
   const confidence = Math.max(0, Math.min(1, response.confidence));
@@ -59,6 +56,9 @@ const callRealAI = async (evidence) => {
     throw new Error('Supabase not configured or user not authenticated');
   }
 
+  const config = getConfig();
+  const confidenceThreshold = config.confidenceThreshold || 0.90;
+
   const controller = new AbortController();
   const startedAt = Date.now();
   
@@ -75,7 +75,7 @@ const callRealAI = async (evidence) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ evidence }),
+      body: JSON.stringify({ evidence, confidenceThreshold }),
       signal: controller.signal
     });
 

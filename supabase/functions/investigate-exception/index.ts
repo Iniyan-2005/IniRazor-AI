@@ -419,16 +419,25 @@ serve(async (req: Request) => {
       )
     }
 
-    const { evidence } = await req.json()
+    const { evidence, confidenceThreshold: rawThreshold } = await req.json()
     requestId = evidence?.requestId || 'unknown-backend-req'
     const paymentId = evidence?.payment?.payment_id || 'unknown-payment'
     startedAt = Date.now()
 
+    // Validate and normalize confidenceThreshold server-side
+    let validatedThreshold = 0.90
+    if (typeof rawThreshold === 'number' && !isNaN(rawThreshold)) {
+      // Normalize percentages if somehow sent as 75 instead of 0.75
+      const parsed = rawThreshold > 1 ? rawThreshold / 100 : rawThreshold
+      // Enforce safe range between 0.5 and 1.0
+      validatedThreshold = Math.max(0.5, Math.min(1.0, parsed))
+    }
 
     console.log('[INVESTIGATION_START]', {
       requestId,
       timestamp: startedAt,
-      paymentId
+      paymentId,
+      configuredThreshold: validatedThreshold
     })
 
     console.log('[INVESTIGATION_TIMING]', {
@@ -439,10 +448,9 @@ serve(async (req: Request) => {
 
     // ── Prompts ───────────────────────────────────────────────────────────
 
-
     /**
      * The strict system prompt for NVIDIA NIM.
-     * States JSON-only output requirements.
+     * States JSON-only output requirements and the financial safety contract.
      * Used for both the first generation and the parse-retry regeneration.
      */
     const systemPrompt = `You are a financial reconciliation classifier.
@@ -469,7 +477,34 @@ Use exactly this schema:
   "explanation": "string",
   "recommendedAction": "AUTO_RESOLVE | NEEDS_REVIEW | UNRESOLVED",
   "evidence": ["array of strings"]
-}`
+}
+
+IMPORTANT: Confidence and recommendedAction are INDEPENDENT concepts.
+Confidence answers: "How sure are you about what happened?"
+recommendedAction answers: "What should the system safely do next?"
+
+CONFIGURED CONFIDENCE THRESHOLD:
+${validatedThreshold}
+
+Set recommendedAction to AUTO_RESOLVE only when ALL of the following are true:
+1. confidence >= ${validatedThreshold}.
+2. The discrepancy has a clearly identifiable cause.
+3. The full financial difference is mathematically explained.
+4. The discrepancy is safe and low-risk to process automatically.
+5. There is no missing settlement record.
+6. There is no missing transaction.
+7. There is no unexplained financial anomaly.
+8. There is no indication of a potentially systemic issue.
+9. The amount/risk profile does not require human verification.
+
+Set recommendedAction to NEEDS_REVIEW if ANY of the following are true:
+1. The full discrepancy cannot be confidently explained.
+2. The evidence is incomplete or ambiguous.
+3. A settlement or transaction is missing.
+4. The discrepancy is unusually large or financially significant.
+5. A systemic issue may exist.
+6. Human approval is appropriate despite high confidence.
+7. confidence is below ${validatedThreshold}.`
 
     /** Standard investigation request with evidence. */
     const investigationPrompt = `EVIDENCE:
@@ -671,11 +706,6 @@ ADDITIONAL JSON FORMAT REQUIREMENTS FOR THIS REGENERATION:
       stage: 'parse_complete',
       elapsedMs: Date.now() - startedAt
     })
-
-    // ── Safety rules ──────────────────────────────────────────────────────
-    if ((aiResult.confidence as number) < 0.9 && aiResult.recommendedAction === 'AUTO_RESOLVE') {
-      aiResult.recommendedAction = 'NEEDS_REVIEW'
-    }
 
     // Clamp confidence to [0, 1]
     aiResult.confidence = Math.max(0, Math.min(1, aiResult.confidence as number))
