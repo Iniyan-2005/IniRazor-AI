@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye, Brain } from 'lucide-react';
 import { 
@@ -378,70 +379,125 @@ const ExceptionsPage = () => {
       )}
 
       {/* Manual Resolution Modal */}
-      {resolutionModalOpen && resolvingException && (
-        <div className="modal-overlay" onClick={() => setResolutionModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '32rem' }}>
-            <div className="modal-header">
-              <h2 className="modal-title">Manual Investigation</h2>
-              <button className="modal-close" onClick={() => setResolutionModalOpen(false)}>
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="modal-body space-y-4">
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500 mb-1">Payment ID</p>
-                <p className="font-mono text-sm font-medium">{resolvingException.payment_id}</p>
-                <div className="mt-3 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500">Expected Net</p>
-                    <p className="font-medium text-slate-900">{formatCurrency(resolvingException.expected_amount)}</p>
+      <AnimatePresence>
+        {resolutionModalOpen && resolvingException && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setResolutionModalOpen(false)}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-lg rounded-2xl p-6 shadow-2xl flex flex-col"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+              }}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Manual Investigation</h2>
+                <button 
+                  onClick={() => setResolutionModalOpen(false)}
+                  className="p-1 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-5 mb-6">
+                <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-surface-2)', border: '1px solid var(--border)' }}>
+                  <p className="text-xs mb-1 uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>Payment ID</p>
+                  <p className="font-mono text-sm font-medium mb-4" style={{ color: 'var(--text-primary)' }}>{resolvingException.payment_id}</p>
+                  <div className="grid grid-cols-2 gap-4 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <div>
+                      <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Expected Net</p>
+                      <p className="font-medium text-lg" style={{ color: 'var(--text-primary)' }}>{formatCurrency(resolvingException.expected_amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Actual Net</p>
+                      <p className="font-medium text-lg" style={{ color: 'var(--text-primary)' }}>{formatCurrency(resolvingException.actual_amount)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Actual Net</p>
-                    <p className="font-medium text-slate-900">{formatCurrency(resolvingException.actual_amount)}</p>
-                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Discrepancy Cause</label>
+                  <select 
+                    className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-shadow"
+                    style={{ 
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)'
+                    }}
+                    value={resolutionCause}
+                    onChange={(e) => setResolutionCause(e.target.value)}
+                  >
+                    <option value="FEE_DISCREPANCY">Fee Discrepancy</option>
+                    <option value="TAX_DISCREPANCY">Tax Discrepancy</option>
+                    <option value="MISSING_SETTLEMENT">Missing Settlement</option>
+                    <option value="REFUND_DISCREPANCY">Refund Discrepancy</option>
+                    <option value="AMOUNT_MISMATCH">Amount Mismatch</option>
+                    <option value="OTHER">Other / Unexplained</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Investigation Comments</label>
+                  <textarea 
+                    className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-shadow resize-none"
+                    style={{ 
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text-primary)'
+                    }}
+                    rows="3"
+                    placeholder="Enter manual investigation details..."
+                    value={resolutionComment}
+                    onChange={(e) => setResolutionComment(e.target.value)}
+                  ></textarea>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Discrepancy Cause</label>
-                <select 
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  value={resolutionCause}
-                  onChange={(e) => setResolutionCause(e.target.value)}
+              <div className="flex w-full gap-3 pt-2">
+                <button
+                  onClick={() => setResolutionModalOpen(false)}
+                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors"
+                  style={{
+                    backgroundColor: 'var(--bg-surface-2)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border)',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'}
                 >
-                  <option value="FEE_DISCREPANCY">Fee Discrepancy</option>
-                  <option value="TAX_DISCREPANCY">Tax Discrepancy</option>
-                  <option value="MISSING_SETTLEMENT">Missing Settlement</option>
-                  <option value="REFUND_DISCREPANCY">Refund Discrepancy</option>
-                  <option value="AMOUNT_MISMATCH">Amount Mismatch</option>
-                  <option value="OTHER">Other / Unexplained</option>
-                </select>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleManualResolve}
+                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors text-white flex items-center justify-center gap-2"
+                  style={{ backgroundColor: 'var(--success)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(0.9)'}
+                  onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Resolve Exception
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Investigation Comments</label>
-                <textarea 
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  rows="3"
-                  placeholder="Enter manual investigation details..."
-                  value={resolutionComment}
-                  onChange={(e) => setResolutionComment(e.target.value)}
-                ></textarea>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setResolutionModalOpen(false)}>
-                Cancel
-              </button>
-              <button className="btn-primary bg-teal-600 hover:bg-teal-700 border-teal-600" onClick={handleManualResolve}>
-                <CheckCircle2 className="w-4 h-4" />
-                Resolve Exception
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

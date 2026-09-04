@@ -115,6 +115,43 @@ serve(async (req) => {
       throw new Error(`Database upsert error: ${upsertError.message}`)
     }
 
+    // 2. Synthesize and Upsert Settlements for captured payments
+    const settlementsToUpsert: any[] = []
+    rzpPayments.forEach((p: any) => {
+      // In Razorpay Test Mode, create a settlement for captured payments
+      if (p.status === 'captured') {
+        const gross = parseFloat((p.amount / 100).toFixed(2))
+        // Use Razorpay's exact fee/tax if available, otherwise fallback to 2% + 18% GST estimate
+        const fee = p.fee ? parseFloat((p.fee / 100).toFixed(2)) : parseFloat((gross * 0.02).toFixed(2))
+        const tax = p.tax ? parseFloat((p.tax / 100).toFixed(2)) : parseFloat((fee * 0.18).toFixed(2))
+        const net = gross - fee - tax
+        
+        settlementsToUpsert.push({
+          settlement_id: `setl_${p.id}`,
+          payment_id: p.id,
+          gross_amount: gross,
+          fee: fee,
+          tax: tax,
+          adjustment: 0,
+          refund: 0,
+          net_amount: parseFloat(net.toFixed(2)),
+          status: 'settled',
+          settled_at: new Date(p.created_at * 1000).toISOString(),
+          metadata: { source: 'RAZORPAY_TEST', ...p }
+        })
+      }
+    })
+
+    if (settlementsToUpsert.length > 0) {
+      const { error: setlError } = await supabase
+        .from('settlements')
+        .upsert(settlementsToUpsert, { onConflict: 'settlement_id', ignoreDuplicates: false })
+        
+      if (setlError) {
+        throw new Error(`Settlements upsert error: ${setlError.message}`)
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -122,7 +159,7 @@ serve(async (req) => {
         fetched: recordsToUpsert.length,
         inserted,
         updated,
-        message: `Successfully synchronized ${recordsToUpsert.length} Razorpay payments (Inserted: ${inserted}, Updated: ${updated})`,
+        message: `Successfully synchronized ${recordsToUpsert.length} Razorpay payments and ${settlementsToUpsert.length} settlements`,
         data: recordsToUpsert,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

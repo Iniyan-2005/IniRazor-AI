@@ -55,6 +55,7 @@ const ReconciliationPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(hasData ? 100 : 0);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [pendingActionType, setPendingActionType] = useState('DEFAULT');
 
   const [isReconciling, setIsReconciling] = useState(false);
   const [reconProgress, setReconProgress] = useState(0);
@@ -76,7 +77,10 @@ const ReconciliationPage = () => {
     document.body.classList.add('modal-active');
     
     const handleEsc = (e) => {
-      if (e.key === 'Escape') setShowResetModal(false);
+      if (e.key === 'Escape') {
+        setShowResetModal(false);
+        setPendingActionType('DEFAULT');
+      }
     };
     window.addEventListener('keydown', handleEsc);
     return () => {
@@ -87,9 +91,19 @@ const ReconciliationPage = () => {
 
   const handleDataActionClick = () => {
     if (dataGenerated) {
+      setPendingActionType('DEFAULT');
       setShowResetModal(true);
     } else {
       executeDataAction();
+    }
+  };
+
+  const handleForceDemoClick = () => {
+    if (dataGenerated) {
+      setPendingActionType('DEMO_FALLBACK');
+      setShowResetModal(true);
+    } else {
+      executeDataGeneration();
     }
   };
 
@@ -99,7 +113,14 @@ const ReconciliationPage = () => {
     setDataGenerated(false);
     setResults(null);
     setTotalRecords(0);
-    executeDataAction();
+    
+    if (pendingActionType === 'DEMO_FALLBACK') {
+      executeDataGeneration();
+    } else {
+      executeDataAction();
+    }
+    
+    setPendingActionType('DEFAULT');
   };
 
   const executeDataAction = () => {
@@ -621,6 +642,29 @@ const ReconciliationPage = () => {
                   : (isSupabaseConfigured ? 'Sync Razorpay Records' : 'Generate 100 Records')}
             </span>
           </button>
+          
+          {isSupabaseConfigured && !isGenerating && (
+            <button 
+              onClick={handleForceDemoClick}
+              className="mt-4 text-sm w-full text-center font-medium rounded-lg py-2 transition-colors border"
+              style={{ 
+                color: 'var(--text-secondary)',
+                backgroundColor: 'var(--bg-surface-2)',
+                borderColor: 'var(--border)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              Want to test with Demo Data instead?
+            </button>
+          )}
+
           {isGenerating && (
             <div className="mt-4">
               <ProgressBar current={genProgress} total={100} label={isSupabaseConfigured ? "Fetching from API..." : "Generating records..."} />
@@ -799,13 +843,15 @@ const ReconciliationPage = () => {
                   className="text-lg font-bold mb-2"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Generate New Dataset?
+                  {pendingActionType === 'DEMO_FALLBACK' || !isSupabaseConfigured ? 'Generate New Dataset?' : 'Sync Razorpay Dataset?'}
                 </h3>
                 <p
                   className="text-sm mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  You are about to generate 100 new synthetic records and start a fresh workflow.
+                  {pendingActionType === 'DEMO_FALLBACK' || !isSupabaseConfigured 
+                    ? 'You are about to generate 100 new synthetic records and start a fresh workflow.' 
+                    : 'You are about to fetch live Razorpay records and start a fresh workflow.'}
                 </p>
                 <div className="p-3 rounded-lg mb-6 w-full text-left" style={{ backgroundColor: 'var(--danger-subtle)', border: '1px solid var(--danger-border)' }}>
                   <p className="text-xs" style={{ color: 'var(--danger)' }}>
@@ -841,7 +887,7 @@ const ReconciliationPage = () => {
                       e.currentTarget.style.filter = 'none';
                     }}
                   >
-                    Reset & Generate
+                    {pendingActionType === 'DEMO_FALLBACK' || !isSupabaseConfigured ? 'Reset & Generate' : 'Reset & Sync'}
                   </button>
                 </div>
               </div>
