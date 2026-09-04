@@ -456,16 +456,12 @@ serve(async (req: Request) => {
 
 Analyze the provided transaction discrepancy.
 
-Return exactly one valid JSON object.
+CRITICAL INSTRUCTION: You must respond ONLY with a raw, valid JSON object. 
+Absolutely NO conversational text, NO chain of thought, and NO explanations outside the JSON object.
+Do not use markdown formatting. Do not use code blocks.
+Failure to output strict JSON will crash the financial pipeline.
 
-Do not reveal reasoning.
-Do not show step-by-step calculations.
-Do not write analysis.
-Do not use markdown.
-Do not use code fences.
-Do not write any text before or after the JSON.
-
-Your response MUST start with { and end with }.
+Your response MUST start exactly with { and end exactly with }.
 
 Use exactly this schema:
 

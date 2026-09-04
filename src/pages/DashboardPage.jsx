@@ -97,8 +97,8 @@ const DashboardPage = () => {
         </motion.div>
         <motion.div variants={itemVariants}>
           <KPICard
-            title="Match Rate"
-            value={formatPercent(stats.matchRate)}
+            title="Resolution Rate"
+            value={formatPercent(stats.resolutionRate)}
             icon={CheckCircle2}
             color="green"
           />

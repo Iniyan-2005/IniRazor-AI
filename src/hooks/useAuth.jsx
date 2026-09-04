@@ -37,9 +37,12 @@ export function AuthProvider({ children }) {
       setLoading(false)
       if (event === 'SIGNED_IN' && session?.user) {
         const name = session.user.user_metadata?.full_name || session.user.email || 'User'
-        // Only show welcome toast for OAuth sign-ins (email login shows its own toast)
+        // Only show welcome toast for OAuth sign-ins that were explicitly initiated in this session
         if (session.user.app_metadata?.provider === 'google') {
-          toast.success(`Welcome, ${name}!`)
+          if (sessionStorage.getItem('is_oauth_login') === 'true') {
+            toast.success(`Welcome, ${name}!`)
+            sessionStorage.removeItem('is_oauth_login')
+          }
         }
       }
     })
@@ -84,6 +87,10 @@ export function AuthProvider({ children }) {
     if (!isSupabaseConfigured) {
       return { success: false, error: 'Google Sign-In requires Supabase to be configured.' }
     }
+    
+    // Set a flag so the auth listener knows this was an explicit login, preventing ghost toasts on reload
+    sessionStorage.setItem('is_oauth_login', 'true')
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -91,6 +98,7 @@ export function AuthProvider({ children }) {
       },
     })
     if (error) {
+      sessionStorage.removeItem('is_oauth_login')
       return { success: false, error: error.message }
     }
     // Browser navigates away to Google — no further action needed here

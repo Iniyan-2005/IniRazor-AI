@@ -51,11 +51,11 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) 
         borderLeft: `4px solid ${palette.border}`,
         borderRadius: '0.75rem',
         boxShadow: 'var(--shadow-card)',
-        padding: '1.25rem',
+        padding: '1rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '1rem',
+        gap: '0.75rem',
         transition: 'box-shadow 200ms ease, background-color 200ms ease, border-color 200ms ease',
       }}
       onMouseEnter={(e) => {
@@ -71,11 +71,9 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, color = 'blue' }) 
             fontSize: '0.6875rem',
             fontWeight: 600,
             textTransform: 'uppercase',
-            letterSpacing: '0.06em',
+            letterSpacing: '0.04em',
             color: 'var(--text-muted)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            lineHeight: 1.2,
           }}
         >
           {title}

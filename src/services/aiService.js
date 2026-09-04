@@ -217,7 +217,7 @@ export const investigateException = async (evidence) => {
         recommendedAction: AI_ACTIONS.NEEDS_REVIEW,
         errorType: isTimeout ? 'TIMEOUT' : 'GENERAL_FAILURE',
         explanation: isTimeout 
-          ? 'AI investigation timed out after 60 seconds.' 
+          ? 'AI investigation timed out. The request exceeded processing limits.' 
           : `AI investigation failed: ${error.message || 'Unknown network error'}.`,
         likelyCause: null,
 

@@ -289,13 +289,13 @@ const MainLayout = () => {
           style={{ backgroundColor: 'var(--bg-app)' }}
         >
           <div className="max-w-7xl mx-auto h-full">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               <motion.div
                 key={location.pathname}
                 initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
                 className="h-full"
               >
                 <Outlet />

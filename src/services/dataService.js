@@ -198,11 +198,15 @@ export const getDashboardStats = () => {
   };
 
   store.reconciliations.forEach(r => {
-    if (r.status === RECON_STATUS.MATCHED) matched++;
-    else if (r.status === RECON_STATUS.AI_RESOLVED) aiResolved++;
-    else if (r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.AI_UNAVAILABLE
-          || r.status === RECON_STATUS.MISSING_SETTLEMENT || r.status === RECON_STATUS.DUPLICATE) needsReview++;
-    else if (r.status === RECON_STATUS.UNRESOLVED) unresolved++;
+    if (r.status === RECON_STATUS.MATCHED) {
+      matched++;
+    } else if (r.status === RECON_STATUS.AI_RESOLVED) {
+      aiResolved++;
+    } else if (r.status === RECON_STATUS.UNRESOLVED) {
+      unresolved++;
+    } else {
+      needsReview++;
+    }
 
     // Count by high-level status
     if (byStatus[r.status] !== undefined) {
@@ -245,7 +249,7 @@ export const getDashboardStats = () => {
     aiResolved,
     needsReview,
     unresolved,
-    matchRate: total ? matched / total : 0,
+    resolutionRate: total ? (matched + aiResolved) / total : 0,
     aiResolutionRate: total ? aiResolved / total : 0,
     exceptions,
     processingTime: store.lastReconciliationTime,

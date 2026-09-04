@@ -402,8 +402,8 @@ const ReconciliationPage = () => {
       store.lastReconciliationTime = Date.now() - startTime;
 
       const dashStats = getDashboardStats();
-      const matchRate = dashStats.total > 0 
-        ? (((dashStats.matched + dashStats.aiResolved) / dashStats.total) * 100).toFixed(1)
+      const resolutionRate = dashStats.total > 0 
+        ? (dashStats.resolutionRate * 100).toFixed(1)
         : '0.0';
       
       const duration = Date.now() - startTime;
@@ -415,7 +415,7 @@ const ReconciliationPage = () => {
         actor: ACTORS.SYSTEM,
         action: `Batch reconciliation completed in ${formatDuration(duration)}`,
         input_snapshot: { total: count, duration },
-        reasoning: `Match rate: ${matchRate}%`,
+        reasoning: `Resolution rate: ${resolutionRate}%`,
         decision: 'BATCH_COMPLETE',
         confidence: 1.0,
         created_at: new Date().toISOString(),
@@ -429,11 +429,23 @@ const ReconciliationPage = () => {
         unresolved: dashStats.unresolved,
         exceptions: dashStats.exceptions,
         duration,
-        matchRate,
+        resolutionRate,
       });
 
       setReconStep('');
-      toast.success(`Reconciliation completed. Match rate: ${matchRate}%`);
+      
+      const aiFailureCount = reconResults.filter(
+        (r) => r.ai_analysis?.classification === 'AI_UNAVAILABLE'
+      ).length;
+
+      if (aiFailureCount > 0) {
+        toast.error(
+          `Reconciliation completed with ${aiFailureCount} AI investigation failure${aiFailureCount > 1 ? 's' : ''}. Affected transactions were escalated for manual review. You may rerun reconciliation to retry.`,
+          { duration: 8000 }
+        );
+      } else {
+        toast.success(`Reconciliation completed. Resolution rate: ${resolutionRate}%`);
+      }
       
       if (stats.missingSettlement > 0) {
         toast(`Missing settlement records: ${stats.missingSettlement} — manual review required.`, {
@@ -674,7 +686,7 @@ const ReconciliationPage = () => {
             <div className="space-y-2.5">
               {[
                 { label: 'Total Records',  value: formatNumber(results.total),       color: 'var(--text-primary)'   },
-                { label: 'Match Rate',     value: `${results.matchRate}%`,            color: 'var(--success)'        },
+                { label: 'Resolution Rate', value: `${results.resolutionRate}%`,     color: 'var(--success)'        },
                 { label: 'AI Resolved',    value: formatNumber(results.aiResolved),   color: 'var(--primary)'        },
                 { label: 'Needs Review',   value: formatNumber(results.needsReview),  color: 'var(--warning)'        },
                 { label: 'Duration',       value: formatDuration(results.duration),   color: 'var(--text-secondary)' },
@@ -710,7 +722,7 @@ const ReconciliationPage = () => {
           <div className="card-body">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 stagger-enter">
               <KPICard title="Total"        value={formatNumber(results.total)}           icon={Database}       color="blue"   />
-              <KPICard title="Matched"      value={formatNumber(results.matched)}         icon={CheckCircle2}   color="green"  />
+              <KPICard title="Auto-Matched" value={formatNumber(results.matched)}         icon={CheckCircle2}   color="green"  />
               <KPICard title="AI Resolved"  value={formatNumber(results.aiResolved)}      icon={Brain}          color="purple" />
               <KPICard title="Needs Review" value={formatNumber(results.needsReview)}     icon={AlertTriangle}  color="amber"  />
               <KPICard title="Unresolved"   value={formatNumber(results.unresolved || 0)} icon={AlertTriangle}  color="red"    />
