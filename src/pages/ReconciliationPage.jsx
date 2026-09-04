@@ -41,6 +41,7 @@ import StatusBadge from '../components/StatusBadge';
 import KPICard from '../components/KPICard';
 import { Play, Database, RefreshCw, CheckCircle2, AlertTriangle, Brain, Loader2, Zap, BarChart3, CreditCard, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ────────────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,23 @@ const ReconciliationPage = () => {
     }
     return null;
   });
+
+  useEffect(() => {
+    if (!showResetModal) {
+      document.body.classList.remove('modal-active');
+      return;
+    }
+    document.body.classList.add('modal-active');
+    
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setShowResetModal(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.classList.remove('modal-active');
+    };
+  }, [showResetModal]);
 
   const handleGenerateDataClick = () => {
     if (dataGenerated || getActiveDataset() === 'SYNTHETIC') {
@@ -703,42 +721,97 @@ const ReconciliationPage = () => {
       )}
 
       {/* Reset Confirmation Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--bg-surface-1)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Generate New Dataset?</h3>
-              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-                You are about to generate 100 new synthetic records and start a fresh reconciliation workflow.
-              </p>
-              <div className="p-4 rounded-lg mb-4" style={{ backgroundColor: 'var(--danger-subtle)', border: '1px solid var(--danger-border)' }}>
-                <p className="text-sm" style={{ color: 'var(--danger)' }}>
-                  <strong>Warning:</strong> All workflow data from the previous run will be cleared, including reconciliation results, exceptions, AI investigations, transactions/settlements from the previous dataset, dashboard workflow data, and audit history.
+      <AnimatePresence>
+        {showResetModal && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowResetModal(false)}
+              aria-hidden="true"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-sm rounded-2xl p-6 shadow-2xl"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="reset-title"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    backgroundColor: 'var(--danger-subtle)',
+                    color: 'var(--danger)',
+                  }}
+                >
+                  <RefreshCw className="w-6 h-6" />
+                </div>
+                <h3
+                  id="reset-title"
+                  className="text-lg font-bold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Generate New Dataset?
+                </h3>
+                <p
+                  className="text-sm mb-2"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  You are about to generate 100 new synthetic records and start a fresh workflow.
                 </p>
+                <div className="p-3 rounded-lg mb-6 w-full text-left" style={{ backgroundColor: 'var(--danger-subtle)', border: '1px solid var(--danger-border)' }}>
+                  <p className="text-xs" style={{ color: 'var(--danger)' }}>
+                    <strong>Warning:</strong> All workflow data from the previous run will be cleared. Settings remain unchanged.
+                  </p>
+                </div>
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => setShowResetModal(false)}
+                    className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors"
+                    style={{
+                      backgroundColor: 'var(--bg-surface-2)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)';
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmReset}
+                    className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors text-white"
+                    style={{ backgroundColor: 'var(--danger)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'brightness(0.9)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'none';
+                    }}
+                  >
+                    Reset & Generate
+                  </button>
+                </div>
               </div>
-              <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>
-                Your reconciliation settings and preferences will not be changed.
-              </p>
-            </div>
-            <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-surface-2)] flex justify-end space-x-3">
-              <button
-                className="px-4 py-2 rounded-lg font-medium transition-colors"
-                style={{ backgroundColor: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                onClick={() => setShowResetModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
-                style={{ backgroundColor: 'var(--danger)', color: '#fff' }}
-                onClick={handleConfirmReset}
-              >
-                Generate & Reset
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
