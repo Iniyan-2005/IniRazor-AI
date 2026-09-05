@@ -128,11 +128,11 @@ export const fetchPersistedReconciledData = async () => {
 };
 
 export const addAuditLog = (log) => {
-  store.auditLogs.push({
+  store.auditLogs = [...store.auditLogs, {
     id: log.id || generateId(),
     created_at: log.created_at || new Date().toISOString(),
     ...log
-  });
+  }];
   saveStore();
 };
 
@@ -167,7 +167,9 @@ export const getReconciliationByPaymentId = (paymentId) => {
 export const updateReconciliation = (id, updates) => {
   const index = store.reconciliations.findIndex(r => r.id === id);
   if (index !== -1) {
-    store.reconciliations[index] = { ...store.reconciliations[index], ...updates };
+    const newReconciliations = [...store.reconciliations];
+    newReconciliations[index] = { ...newReconciliations[index], ...updates };
+    store.reconciliations = newReconciliations;
     saveStore();
   }
 };

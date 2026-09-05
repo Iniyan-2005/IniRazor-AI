@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye, Brain } from 'lucide-react';
 import { 
   updateReconciliation, addAuditLog, 
-  persistReconciliationsToDB, persistAuditLogsToDB, getDataMode
+  persistReconciliationsToDB, persistAuditLogsToDB, getDataMode,
+  getReconciliationById
 } from '../services/dataService';
 import { useStore } from '../hooks/useStore';
 import StatusBadge from '../components/StatusBadge';
@@ -63,7 +64,7 @@ const ExceptionsPage = () => {
 
     // Phase 7: Persist Human Approval & Audit to DB
     if (getDataMode() === 'RAZORPAY') {
-      const updatedRecon = getStore().reconciliations.find(r => r.id === reconId);
+      const updatedRecon = getReconciliationById(reconId);
       if (updatedRecon) {
         Promise.all([
           persistReconciliationsToDB([updatedRecon]),
@@ -103,7 +104,7 @@ const ExceptionsPage = () => {
     // useStore() hook triggers automatic re-render when auditLog/reconciliation state changes.
 
     if (getDataMode() === 'RAZORPAY') {
-      const updatedRecon = getStore().reconciliations.find(r => r.id === resolvingException.id);
+      const updatedRecon = getReconciliationById(resolvingException.id);
       if (updatedRecon) {
         Promise.all([
           persistReconciliationsToDB([updatedRecon]),
