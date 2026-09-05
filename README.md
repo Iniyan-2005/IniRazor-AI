@@ -1,216 +1,95 @@
-# IniRazorAI — AI Finance Controller
+# IniRazorAI — AI-Powered Reconciliation Intelligence
 
-> **Razorpay AI Buildathon — Track 04: AI Finance Controller**
+![IniRazorAI Dashboard](public/assets/welcome-bg.png) 
 
-**IniRazorAI** is an AI-powered payment and settlement reconciliation controller that automatically matches financial records, investigates ambiguous discrepancies, resolves safe cases, escalates uncertain cases, and maintains a complete audit trail.
+**IniRazorAI** is a payment reconciliation platform built for the **Razorpay Buildathon**. It automates financial discrepancy detection by combining a high-speed deterministic math engine with advanced AI investigation powered exclusively by **NVIDIA NIM (Nemotron 120B)**.
 
-## 🎯 Problem
+Every day, merchants on Razorpay receive thousands of settlements. The settlement amount rarely equals what was charged. Standard fees and taxes are easy to calculate, but when a discrepancy remains after accounting for every known deduction, human analysts must investigate. At scale, this is the biggest bottleneck in financial operations.
 
-Merchants receive customer payments through payment gateways and later receive settlements. Finance teams need to verify that:
+IniRazorAI transforms this manual spreadsheet exercise into a safe, auditable, AI-assisted workflow.
 
-- Payments were correctly settled
-- Fees were correctly deducted
-- Taxes (GST) were correctly accounted for
-- Refunds were reflected
-- Adjustments were valid
-- No settlements are missing
-- No duplicate records exist
+---
 
-**IniRazorAI answers:** *"Does this payment correctly reconcile with its settlement, and if not, can we explain the discrepancy?"*
+## 🚀 Key Features
 
-## 🏗️ Architecture
+### 1. Hybrid Two-Phase Architecture
+- **Phase 1 (Deterministic Math):** Instantly resolves ~70% of discrepancies by testing differences against known gateway fees, GST/taxes, refunds, and manual adjustments within a configurable rounding tolerance.
+- **Phase 2 (AI Investigation):** Only the mathematically unexplainable anomalies are sent to NVIDIA NIM for investigation.
 
-```mermaid
-graph TD
-    A["React.js + Vite + Tailwind"] --> B["Supabase Client"]
-    B --> C["Supabase PostgreSQL"]
-    B --> D["Supabase Edge Functions"]
-    D --> E["Reconciliation Engine"]
-    D --> F["AI Agent (NVIDIA NIM)"]
-    D --> G["Razorpay API"]
-    E --> C
-    F --> C
-    G --> C
-    C --> H["Audit Logs"]
-```
+### 2. Fail-Safe Financial Safety
+Built on the principle: **When in doubt, send it to a human.**
+- **Confidence Gate:** AI decisions must meet a strict, configurable confidence threshold (default 90%) to be auto-resolved. This threshold is enforced both in the frontend and injected directly into the AI's system prompt.
+- **Fail-Safe Fallbacks:** API timeouts, rate limits (HTTP 429), authentication errors, or invalid JSON responses never result in incorrect financial resolutions. Every failure mode safely routes the transaction to the human-managed Exceptions Queue.
 
-### Core Principle
+### 3. Self-Healing AI Pipeline
+- **Parse-Retry Generation:** If the AI model returns markdown prose instead of the strict JSON format required, the Supabase Edge Function attempts to extract it. If it fails, it automatically triggers a second AI generation with a stricter "CORRECTION REQUIRED" prompt.
+- **HTTP Resilience:** Built-in automatic retries with exponential backoff for NVIDIA API 503 (Service Overloaded) responses.
 
-> **Code calculates. AI reasons. Humans approve uncertainty.**
+### 4. Human-in-the-Loop & Immutable Audit Trail
+- Ambiguous transactions require active human sign-off (Approve/Reject).
+- Every single system action, AI reasoning block, and human decision is recorded in a chronological, append-only **Audit Trail** alongside a full snapshot of the financial evidence used to make the decision.
 
-| Layer | What It Does |
-|-------|-------------|
-| **Deterministic Engine** | ID matching, arithmetic, fee/tax calculations, duplicate detection |
-| **AI Agent (NVIDIA NIM)** | Investigates ambiguous discrepancies, explains likely causes |
-| **Human Review** | Approves/rejects AI recommendations when confidence < 90% |
-| **Audit Trail** | Logs every action with timestamps, actors, and reasoning |
+### 5. Real-Time Reactive UI
+- Dashboard KPIs, Exception Queues, and the Audit Trail update in real-time as AI background workers complete tasks, powered by a custom lightweight pub/sub React architecture (`useStore`).
 
-## 🤖 Why AI?
+---
 
-AI is used **only** for ambiguous cases that deterministic code cannot resolve:
+## 🛠️ Technology Stack
 
-- ✅ **Deterministic:** Exact matching, fee calculations, missing settlement detection
-- ✅ **Deterministic:** Tax calculations, duplicate detection, status validation
-- 🧠 **AI:** Unexplained differences, interpreting adjustment patterns
-- 🧠 **AI:** Recommending whether a case can safely be resolved
-- 👤 **Human:** Final approval when AI confidence is below threshold
+- **Frontend:** React 19, Vite, Tailwind CSS, Framer Motion, Recharts
+- **Backend:** Supabase Edge Functions (Deno / TypeScript)
+- **AI Provider:** NVIDIA NIM (`nvidia/nemotron-3-super-120b-a12b`) exclusively (0 temperature for maximum determinism).
+- **Payment Integration:** Razorpay Test API
 
-The AI **never** modifies financial data, creates records, or initiates transactions.
+---
 
-## 📊 Dataset
+## ⚙️ How It Works (The AI Flow)
 
-- **100 synthetic records** with realistic Indian payment data
-- Ground truth stored for evaluation (never sent to AI)
+1. When a transaction is mathematically unexplained, a structured evidence JSON is built (Gross amount, Fee, GST, Difference, etc.).
+2. Evidence is POSTed to the Supabase Edge Function `investigate-exception`.
+3. The Edge Function calls NVIDIA NIM with a strict zero-shot system prompt demanding a JSON response with:
+   - `classification` (e.g., AMOUNT_MISMATCH, UNEXPLAINED_DISCREPANCY)
+   - `confidence` (0.0 to 1.0)
+   - `likelyCause` (Plain English explanation)
+   - `recommendedAction` (AUTO_RESOLVE or NEEDS_REVIEW)
+4. The frontend receives the payload and checks if `confidence >= threshold` AND `recommendedAction === 'AUTO_RESOLVE'`. If yes, it is marked **AI Resolved**. If no, it is marked **Needs Review**.
 
-| Category | % | Count |
-|----------|---|-------|
-| Normal matches | 70% | 70 |
-| Fee/Tax differences | 10% | 10 |
-| Refund differences | 5% | 5 |
-| Adjustment differences | 5% | 5 |
-| Missing settlements | 4% | 4 |
-| Duplicates | 3% | 3 |
-| Unexplained mismatches | 2% | 2 |
-| Invalid data | 1% | 1 |
+---
 
-## 📈 Metrics
-
-All metrics are calculated dynamically from real reconciliation results:
-
-- **Match Rate** — Percentage of records correctly matched
-- **Accuracy** — System predictions vs ground truth
-- **Precision** — True positives / (True positives + False positives)
-- **Recall** — True positives / (True positives + False negatives)
-- **F1 Score** — Harmonic mean of precision and recall
-- **Exception List** — Honest list of unresolvable cases
-
-## 🛡️ Failure Handling
-
-- **AI timeout/error:** Transaction escalated to `NEEDS_REVIEW` with audit log
-- **Low confidence:** Never auto-resolves below 90% threshold
-- **Deliberate failure:** Includes an intentionally unresolvable transaction to demonstrate honest failure
-- **Invalid AI response:** Validated and rejected with safe fallback
-
-## 💳 Razorpay Integration
-
-| Mode | Status |
-|------|--------|
-| **Demo Mode** | Full 100-record dataset, no credentials needed |
-| **Razorpay Test Mode** | Fetches test payments via Razorpay API |
-
-The app is fully functional in Demo Mode without any external credentials.
-
-## 🚀 Setup
+## 🏃‍♂️ Running the Project Locally
 
 ### Prerequisites
+- Node.js (v18+)
+- A Supabase project (for Edge Functions)
+- NVIDIA NIM API Key
 
-- Node.js 18+
-- npm or yarn
+### Setup Steps
+1. Clone the repository and install dependencies:
+   ```bash
+   npm install
+   ```
+2. Set up your `.env` file based on `.env.example`:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+3. Set your Edge Function secrets in Supabase:
+   ```bash
+   supabase secrets set AI_PROVIDER=NVIDIA
+   supabase secrets set AI_API_KEY=your_nvidia_nim_api_key
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-### Installation
+---
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/InirazorAI.git
-cd InirazorAI
+## 📊 Evaluation & Benchmarking
+The system features a built-in Evaluation Page that benchmarks AI decisions against known ground-truth datasets to compute Accuracy, Precision, Recall, and F1 Scores using a Confusion Matrix. 
 
-# Install dependencies
-npm install
+> *Note: By default, the system runs in a Synthetic Data Demo mode with a seeded random number generator to demonstrate the edge cases without requiring live payment credentials.*
 
-# Start development server
-npm run dev
-```
+---
 
-### Demo Mode (No Setup Required)
-
-Just run `npm run dev` — the app works immediately with synthetic data.
-
-**Demo credentials:**
-- Email: `admin@inirazor.ai`
-- Password: `admin123`
-
-### Supabase Setup (Optional)
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the migration: `supabase/migrations/001_create_tables.sql`
-3. Copy `.env.example` to `.env` and fill in:
-
-```env
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-4. Set Edge Function secrets:
-
-```bash
-supabase secrets set AI_PROVIDER=NVIDIA
-supabase secrets set AI_API_KEY=your-nvidia-nim-key
-supabase secrets set AI_MODEL=nvidia/nemotron-3-ultra-550b-a55b
-supabase secrets set AI_BASE_URL=https://integrate.api.nvidia.com/v1
-supabase secrets set RAZORPAY_KEY_ID=your-key
-supabase secrets set RAZORPAY_KEY_SECRET=your-secret
-```
-
-5. Deploy Edge Functions:
-
-```bash
-supabase functions deploy razorpay-sync
-supabase functions deploy fetch-payments
-supabase functions deploy investigate-exception
-supabase functions deploy persist-reconciliations
-supabase functions deploy persist-audit-logs
-supabase functions deploy fetch-reconciled-data
-```
-
-## 🧪 Testing
-
-The reconciliation engine includes tests for all 12 scenarios:
-
-1. Exact match
-2. Fee difference
-3. Tax difference
-4. Refund discrepancy
-5. Adjustment discrepancy
-6. Missing settlement
-7. Duplicate settlement
-8. Amount mismatch
-9. Unknown discrepancy
-10. AI failure handling
-11. Human approval workflow
-12. Audit log creation
-
-
-## 🔒 Security
-
-- Razorpay secret key: server-side only (Edge Functions)
-- AI API key: server-side only (Edge Functions)
-- Supabase service-role key: never in frontend
-- Row Level Security enabled on all tables
-- AI responses validated before acceptance
-- No secrets committed to repository
-
-## 📁 Project Structure
-
-```
-├── src/
-│   ├── components/     # Reusable UI (KPICard, StatusBadge, DataTable, etc.)
-│   ├── pages/          # Route-level pages
-│   ├── layouts/        # MainLayout with sidebar + header
-│   ├── services/       # Data service, AI service, reconciliation engine
-│   ├── hooks/          # useAuth
-│   ├── utils/          # Constants, formatters, synthetic data generator
-│   ├── charts/         # Recharts components
-│   └── features/       # Feature-specific modules
-├── supabase/
-│   ├── functions/      # Edge Functions (5 functions)
-│   ├── migrations/     # SQL schema
-│   └── config.toml
-├── .env.example
-└── README.md
-```
-
-## 🏆 Built For
-
-**Razorpay AI Buildathon — Track 04: AI Finance Controller**
-
-Built by **Iniyan** — IniRazorAI: Intelligent Innovation
+*Built with ❤️ for the Razorpay Buildathon.*
