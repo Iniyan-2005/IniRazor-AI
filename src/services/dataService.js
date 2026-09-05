@@ -26,9 +26,16 @@ try {
   console.warn('Could not restore state from localStorage', e);
 }
 
+const listeners = new Set();
+export const subscribeToStore = (listener) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
 const saveStore = () => {
   try {
     localStorage.setItem('inirazor_store', JSON.stringify(store));
+    listeners.forEach(l => l());
   } catch (e) {
     console.warn('Could not save state to localStorage', e);
   }
@@ -200,7 +207,7 @@ export const getDashboardStats = () => {
   store.reconciliations.forEach(r => {
     if (r.status === RECON_STATUS.MATCHED) {
       matched++;
-    } else if (r.status === RECON_STATUS.AI_RESOLVED) {
+    } else if (r.status === RECON_STATUS.AI_RESOLVED || r.status === RECON_STATUS.MANUALLY_RESOLVED) {
       aiResolved++;
     } else if (r.status === RECON_STATUS.UNRESOLVED) {
       unresolved++;

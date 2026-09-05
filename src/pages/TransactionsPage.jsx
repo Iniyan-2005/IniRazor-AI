@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ArrowLeftRight, ArrowRight } from 'lucide-react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
-import { getStore, isReady } from '../services/dataService';
+import { useStore } from '../hooks/useStore';
+import { isReady } from '../services/dataService';
 import { formatCurrency, formatDate, formatConfidence, truncate } from '../utils/formatters';
 
 const TransactionsPage = () => {
@@ -11,7 +12,8 @@ const TransactionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  const { payments, reconciliations } = getStore();
+  const store = useStore();
+  const { payments, reconciliations } = store;
 
   const data = useMemo(() => {
     if (!isReady()) return [];

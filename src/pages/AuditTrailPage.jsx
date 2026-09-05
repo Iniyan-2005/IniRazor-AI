@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { getAuditLogs } from '../services/dataService';
+import { useStore } from '../hooks/useStore';
 import AuditTimeline from '../components/AuditTimeline';
 import KPICard from '../components/KPICard';
 import { Search, Filter, ScrollText, Monitor, Bot, User } from 'lucide-react';
@@ -8,8 +8,12 @@ import { EVENT_TYPES } from '../utils/constants';
 const AuditTrailPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
-
-  const allLogs = getAuditLogs();
+  
+  const store = useStore();
+  // Ensure we format it identically to how getAuditLogs does it (reverse chronological)
+  const allLogs = useMemo(() => {
+    return [...store.auditLogs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [store.auditLogs]);
 
   const filteredLogs = useMemo(() => {
     return allLogs.filter((log) => {

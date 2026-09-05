@@ -39,7 +39,7 @@ import {
 import ProgressBar from '../components/ProgressBar';
 import StatusBadge from '../components/StatusBadge';
 import KPICard from '../components/KPICard';
-import { Play, Database, RefreshCw, CheckCircle2, AlertTriangle, Brain, Loader2, Zap, BarChart3, CreditCard, Bot } from 'lucide-react';
+import { Play, Database, RefreshCw, CheckCircle2, AlertTriangle, Brain, Loader2, Zap, BarChart3, CreditCard, Bot, FlaskConical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -646,22 +646,11 @@ const ReconciliationPage = () => {
           {isSupabaseConfigured && !isGenerating && (
             <button 
               onClick={handleForceDemoClick}
-              className="mt-4 text-sm w-full text-center font-medium rounded-lg py-2 transition-colors border"
-              style={{ 
-                color: 'var(--text-secondary)',
-                backgroundColor: 'var(--bg-surface-2)',
-                borderColor: 'var(--border)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)';
-                e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
-              }}
+              className="mt-4 text-sm w-full text-center font-semibold rounded-lg py-2 transition-all border flex items-center justify-center gap-2 bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50"
             >
-              Want to test with Demo Data instead?
+              <FlaskConical className="w-3.5 h-3.5" />
+              <span>Test with Demo Data</span>
+              <span className="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full tracking-wide">DEMO</span>
             </button>
           )}
 
@@ -698,7 +687,15 @@ const ReconciliationPage = () => {
             </div>
             <div>
               <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}>2. Run Reconciliation</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deterministic + AI</p>
+              <div className="flex items-center gap-2">
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deterministic + AI</p>
+                {dataGenerated && getActiveDataset() === 'SYNTHETIC' && (
+                  <span className="text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full tracking-wide flex items-center gap-1">
+                    <FlaskConical className="w-2.5 h-2.5" />
+                    DEMO
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.875rem' }}>

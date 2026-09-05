@@ -32,6 +32,16 @@ const EvaluationPage = () => {
   const metrics = useMemo(() => {
     if (reconciliations.length === 0) return null;
 
+    // Ground truth statuses that the system should classify as resolvable.
+    // Source: syntheticDataGenerator.js — these are the values injected into payment.ground_truth_status.
+    const RESOLVABLE_GROUND_TRUTHS = new Set([
+      GROUND_TRUTH.MATCHED,
+      GROUND_TRUTH.FEE_DISCREPANCY,
+      GROUND_TRUTH.TAX_DISCREPANCY,
+      GROUND_TRUTH.REFUND_DISCREPANCY,
+      GROUND_TRUTH.ADJUSTMENT_DISCREPANCY,
+    ]);
+
     let correct = 0, incorrect = 0, unresolvedCount = 0;
     let tp = 0, fp = 0, tn = 0, fn = 0;
 
@@ -41,7 +51,7 @@ const EvaluationPage = () => {
 
       const isSystemResolved =
         recon.status === RECON_STATUS.MATCHED || recon.status === RECON_STATUS.AI_RESOLVED;
-      const isGroundTruthResolved = payment.ground_truth_status === GROUND_TRUTH.SHOULD_MATCH;
+      const isGroundTruthResolved = RESOLVABLE_GROUND_TRUTHS.has(payment.ground_truth_status);
 
       if (isSystemResolved && isGroundTruthResolved)       { tp++; correct++; }
       else if (isSystemResolved && !isGroundTruthResolved) { fp++; incorrect++; }

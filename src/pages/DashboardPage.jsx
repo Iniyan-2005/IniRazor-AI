@@ -8,22 +8,17 @@ import ReconciliationStatusChart from '../charts/ReconciliationStatusChart';
 import ExceptionBreakdownChart from '../charts/ExceptionBreakdownChart';
 import ProcessingPerformanceChart from '../charts/ProcessingPerformanceChart';
 
+import { useStore } from '../hooks/useStore';
 import { getDashboardStats, isReady } from '../services/dataService';
 import { formatPercent, formatDuration, formatNumber } from '../utils/formatters';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [dataReady, setDataReady] = useState(false);
+  const store = useStore(); // Reactively subscribes to store updates
   const prefersReducedMotion = useReducedMotion();
 
-  useEffect(() => {
-    const ready = isReady();
-    setDataReady(ready);
-    if (ready) {
-      setStats(getDashboardStats());
-    }
-  }, []);
+  const dataReady = store.reconciliations && store.reconciliations.length > 0;
+  const stats = dataReady ? getDashboardStats() : null;
 
   if (!dataReady || !stats) {
     return (

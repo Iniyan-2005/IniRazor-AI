@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { CheckCircle2, XCircle, HelpCircle, AlertTriangle, Eye, Brain } from 'lucide-react';
 import { 
-  getStore, updateReconciliation, addAuditLog, 
+  updateReconciliation, addAuditLog, 
   persistReconciliationsToDB, persistAuditLogsToDB, getDataMode
 } from '../services/dataService';
+import { useStore } from '../hooks/useStore';
 import StatusBadge from '../components/StatusBadge';
 import ConfidenceMeter from '../components/ConfidenceMeter';
 import { formatCurrency, generateId } from '../utils/formatters';
@@ -15,7 +16,6 @@ import { RECON_STATUS, EVENT_TYPES, ACTORS } from '../utils/constants';
 const ExceptionsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('NEEDS_REVIEW');
-  const [refreshKey, setRefreshKey] = useState(0);
   
   // Manual Resolution Modal State
   const [resolutionModalOpen, setResolutionModalOpen] = useState(false);
@@ -23,7 +23,8 @@ const ExceptionsPage = () => {
   const [resolutionCause, setResolutionCause] = useState('FEE_DISCREPANCY');
   const [resolutionComment, setResolutionComment] = useState('');
 
-  const { reconciliations } = getStore();
+  const store = useStore();
+  const reconciliations = store.reconciliations;
 
   const handleAction = (reconId, action) => {
     let newStatus, eventType, toastMsg, actionType;
@@ -58,8 +59,7 @@ const ExceptionsPage = () => {
       created_at: new Date().toISOString(),
     };
     addAuditLog(auditLog);
-
-    setRefreshKey((prev) => prev + 1);
+    // useStore() hook triggers automatic re-render when auditLog/reconciliation state changes.
 
     // Phase 7: Persist Human Approval & Audit to DB
     if (getDataMode() === 'RAZORPAY') {
@@ -100,8 +100,7 @@ const ExceptionsPage = () => {
       created_at: new Date().toISOString(),
     };
     addAuditLog(auditLog);
-
-    setRefreshKey((prev) => prev + 1);
+    // useStore() hook triggers automatic re-render when auditLog/reconciliation state changes.
 
     if (getDataMode() === 'RAZORPAY') {
       const updatedRecon = getStore().reconciliations.find(r => r.id === resolvingException.id);
@@ -128,7 +127,7 @@ const ExceptionsPage = () => {
       (r) => r.status === RECON_STATUS.NEEDS_REVIEW || r.status === RECON_STATUS.UNRESOLVED
           || r.status === RECON_STATUS.MISSING_SETTLEMENT || r.status === RECON_STATUS.DUPLICATE
     ),
-    [reconciliations, refreshKey]
+    [reconciliations]
   );
 
   const filteredExceptions = useMemo(
