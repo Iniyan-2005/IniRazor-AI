@@ -5,6 +5,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
+import { wipeEntireStore } from '../services/dataService'
 
 const AuthContext = createContext(null)
 
@@ -143,6 +144,7 @@ export function AuthProvider({ children }) {
   }
 
   const logout = async () => {
+    wipeEntireStore();
     if (isSupabaseConfigured) {
       await supabase.auth.signOut()
     } else {

@@ -270,6 +270,21 @@ export const resetWorkflowState = () => {
   saveStore();
 };
 
+// Security: Completely nukes the local store when a user logs out
+export const wipeEntireStore = () => {
+  store.payments = [];
+  store.settlements = [];
+  store.reconciliations = [];
+  store.auditLogs = [];
+  store.evaluationResults = [];
+  store.lastReconciliationTime = null;
+  store.activeDataset = null;
+  store.isDataGenerated = false;
+  store.dataMode = null;
+  store.modeSource = null;
+  saveStore();
+};
+
 export const clearAll = () => {
   store = {
     payments: [],
