@@ -65,10 +65,21 @@ serve(async (req) => {
       )
     }
 
-    // Connect to Supabase using standard architecture
+    // Connect to Supabase using standard architecture, but respecting RLS
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Missing Authorization header')
+    const token = authHeader.replace('Bearer ', '')
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    
+    const authClient = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token)
+    if (authError || !user) throw new Error('Unauthorized user')
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
 
     // Prepare normalized records
     const recordsToUpsert = rzpPayments.map((p: any) => ({
@@ -80,7 +91,8 @@ serve(async (req) => {
       customer_name: p.email || p.contact || 'Unknown',
       payment_method: p.method || 'unknown',
       created_at: new Date(p.created_at * 1000).toISOString(),
-      metadata: { source: 'RAZORPAY_TEST', ...p }
+      metadata: { source: 'RAZORPAY_TEST', ...p },
+      user_id: user.id
     }))
 
     // Fetch existing payment IDs to calculate accurate counts
@@ -137,7 +149,8 @@ serve(async (req) => {
           net_amount: parseFloat(net.toFixed(2)),
           status: 'settled',
           settled_at: new Date(p.created_at * 1000).toISOString(),
-          metadata: { source: 'RAZORPAY_TEST', ...p }
+          metadata: { source: 'RAZORPAY_TEST', ...p },
+          user_id: user.id
         })
       }
     })

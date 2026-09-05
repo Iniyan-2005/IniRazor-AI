@@ -34,8 +34,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: false, message: 'Unauthorized access' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Initialize privileged client for DB operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Initialize standard Supabase client with user's Auth header to correctly enforce RLS
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
 
     // 1. Fetch all reconciliations, newest first
     const { data: allRecons, error: reconError } = await supabase

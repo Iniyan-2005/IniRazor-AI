@@ -10,6 +10,8 @@ import EvaluationPage from './pages/EvaluationPage'
 import SettingsPage from './pages/SettingsPage'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CursorProvider } from './contexts/CursorContext'
 
@@ -36,6 +38,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route
             element={
               <ProtectedRoute>

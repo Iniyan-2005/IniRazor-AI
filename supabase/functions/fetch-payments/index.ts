@@ -20,10 +20,17 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     
-    // Initialize standard Supabase client with service role to securely bypass RLS on the server
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Extract Authorization header to execute queries as the authenticated user (respecting RLS)
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing Authorization header')
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
 
     // Fixed, non-arbitrary query with deterministic ordering and bounded limit
     const { data, error } = await supabase
