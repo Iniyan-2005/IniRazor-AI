@@ -405,6 +405,26 @@ const SettingsPage = () => {
           )}
         </div>
       </div>
+      {/* Legal & Compliance */}
+      <div className="card">
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Shield style={{ width: '1.125rem', height: '1.125rem', color: 'var(--text-muted)' }} />
+          <h2 style={cardTitleStyle}>Legal & Compliance</h2>
+        </div>
+        <div className="card-body">
+          <p style={hintStyle} className="mb-4">
+            View the policies governing this Razorpay Buildathon demonstration application.
+          </p>
+          <div className="flex gap-4">
+            <button onClick={() => window.open('/privacy-policy', '_blank')} className="btn-secondary">
+              View Privacy Policy
+            </button>
+            <button onClick={() => window.open('/terms-of-service', '_blank')} className="btn-secondary">
+              View Terms of Service
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
