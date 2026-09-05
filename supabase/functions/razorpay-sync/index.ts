@@ -72,14 +72,15 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     const authClient = createClient(supabaseUrl, supabaseAnonKey)
     const { data: { user }, error: authError } = await authClient.auth.getUser(token)
     if (authError || !user) throw new Error('Unauthorized user')
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
+    // Use service role key to perform database upsert with full admin privileges,
+    // while strictly tagging each record with user_id: user.id for multi-tenant isolation
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Prepare normalized records
     const recordsToUpsert = rzpPayments.map((p: any) => ({

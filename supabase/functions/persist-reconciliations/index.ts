@@ -35,10 +35,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: false, message: 'Unauthorized access' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Use anon client with user's Auth header to enforce RLS correctly
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
+    // Use service role key to persist reconciliations with admin privileges,
+    // while ensuring user_id is explicitly set for tenant isolation
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const { reconciliations } = await req.json()
 
